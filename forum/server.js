@@ -86,6 +86,16 @@ app.get('/about', function(요청, 응답) {
   응답.sendFile(__dirname + '/about.html')
 })
 
+// 서버기능 - 상품목록 json 데이터 전송(Http - Get 방식)
+// 1) 누가 상품목록 json 데이터 접속(요청)('/data') (크롬 웹브라우저 실행 -> URL 주소 "http://localhost:8080/data" 입력 및 엔터 )
+// 2) 자동으로 함수 "app.get()" 실행 -> 접속요청 처리
+// 3) 2)번의 함수 "app.get()" 실행되고 나서 -> 2)번의 함수 "app.get()" 소괄호() 안에 존재하는 
+//    콜백함수 "function(요청, 응답) => { 응답.sendFile(__dirname + '/data.json') }" 내에 있는 코드 "응답.sendFile(__dirname + '/data.json')" 가 실행
+// 4) .sendFile(__dirname + '/data.json') 입력하면 data.json 파일을 유저에게 보내주기 (크롬 웹브라우저 화면 data.json 파일에 속한 상품목록 json 데이터 출력)
+app.get('/data', function(요청, 응답) {
+  응답.sendFile(__dirname + '/data.json')
+})
+
 // 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
 
 // 5. 4번에서 터미널에 출력된 URL 주소 http://localhost:8080 에 마우스 커서 갖다대고 키보드 단축키 Ctrl + 마우스 왼쪽 버튼 클릭
