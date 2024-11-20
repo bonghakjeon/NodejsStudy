@@ -1,3 +1,16 @@
+// TODO : 터미널 창 에서 명령어 "node server.js" 입력 및 엔터시 아래와 같은 오류 메시지 출력 시
+//        오류 메시지 "node : 'node' 용어가 cmdlet, 함수, 스크립트 파일 또는 실행할 수 있는 프로그램 이름으로 인식되지 않습니다. 
+//        이름이 정확한지 확인하고 경로가 포함된 경우 경로가 올바른지 검증한 다음 다시 시도하십시오."
+//        기본 터미널 창이 powershell이기 때문에 발생하는 오류 이므로, 
+//        1. ctrl+shift+p 누른 후 맨 위에 뜨는 Terminal:Select Default Profile 선택 or 검색창에 'Terminal:Select Default Profile' 치기
+//        2. Command Prompt로 설정 후 터미널 닫았다 다시 열기(Ctrl+`는 터미널 열기)
+//        3. 기본 터미널 변한거 확인하기
+// 참고 URL - https://yeon960.tistory.com/269
+
+// TODO : 터미널 창 에서 명령어 "node server.js" 입력 및 엔터시 오류 메시지 "'node'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는 배치 파일이 아닙니다."
+//        출력시 시스템 환경 변수 편집 화면 들어가서 항목 Path에 node.js 경로 "C:\Program Files\nodejs" 추가하기 (2024.11.20 jbh)
+// 참고 URL - https://bbeomgeun.tistory.com/37
+
 // [코딩애플] Node.js, MongoDB 스터디 
 // Part 1 : (신버전)
 
@@ -6,6 +19,8 @@
 // 2강 - Nodejs의 장점이 뭐냐면
 
 // 3강 - Node.js, Express 설치와 셋팅
+
+// 4강 - 웹페이지 보내주려면 (라우팅)
 
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
@@ -96,6 +111,10 @@ app.get('/data', function(요청, 응답) {
   응답.sendFile(__dirname + '/data.json')
 })
 
+app.get('/', (요청, 응답)=>{
+  응답.sendFile(__dirname + '/index.html')
+})
+
 // 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
 
 // 5. 4번에서 터미널에 출력된 URL 주소 http://localhost:8080 에 마우스 커서 갖다대고 키보드 단축키 Ctrl + 마우스 왼쪽 버튼 클릭
@@ -108,6 +127,7 @@ app.get('/data', function(요청, 응답) {
 // (예제 3) app.get('/어쩌구', (요청, 응답) => { 응답.send('테스트') }) - Node.js "app.get()"도 함수 사용문법임 / (예제 3)의 () => {} 부분도 함수 만들어서 집어넣는 문법입니다.
 
 // 자바스크립트 문법(콜백함수) 설명 
+// 다른 함수 파라미터에 들어가는 함수 의미함
 // app.get('/어쩌구', (요청, 응답) => { 응답.send('테스트') }) 함수 호출할 때, "app.get()" 함수 소괄호() 안에 들어가는 함수 "(요청, 응답) => { 응답.send('테스트') }"를 콜백함수라고 부른다.
 // 콜백함수는 자바스크립트에서 특정 함수들이나 특정 코드들을 순차적으로 차례차례 실행하고 싶을 때 자주 사용합니다. 
 
