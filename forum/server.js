@@ -22,6 +22,8 @@
 
 // 4강 - 웹페이지 보내주려면 (라우팅)
 
+// 5강 - 웹페이지에 디자인 넣으려면
+
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
 
@@ -31,11 +33,30 @@
 const express = require('express') // express 라이브러리 사용
 const app = express() // express 라이브러리 사용
 
-// 서버 띄우는 코드(app.listen) (내 컴퓨터 Port 하나 오픈하는 문법이다. 이렇게 Port를 오픈해야 다른 컴퓨터가 내 컴퓨터 쪽으로 웹서비스를 연결하여 통신하여 들어올 수 있다.)
+// 4. 웹서버에 public 폴더 등록 
+// 용도 - public 폴더 안에 있는 static 파일들(.css / 이미지 / .js)을 html 파일 (예) index.html, about.html 등등... 에서 가져다 쓰기 위한 용도 
+// 참고 URL - https://coding-yesung.tistory.com/175
+app.use(express.static(__dirname + '/public'));
+
+// 5. 서버 띄우는 코드(app.listen) (내 컴퓨터 Port 하나 오픈하는 문법이다. 이렇게 Port를 오픈해야 다른 컴퓨터가 내 컴퓨터 쪽으로 웹서비스를 연결하여 통신하여 들어올 수 있다.)
 // 서버 띄울 PORT 번호 입력란 (Port 8080)
 app.listen(8080, ()=>{
   console.log('http://localhost:8080 에서 서버 실행중')
 })
+
+// 터미널 명령어 "npm install -g nodemon" 입력 및 엔터 -> nodemon 라이브러리 설치 완료 
+// 터미널 명령어 "nodemon server.js" 기능 - 소스코드 변경 후 파일저장하면 서버 자동으로 재시작(다시 컴파일 처리)
+// 터미널 명령어 "nodemon server.js" 입력 및 엔터 후 
+// 터미널 창에 출력되는 메시지 
+// [nodemon] restarting due to changes...
+// [nodemon] starting `node server.js`
+// http://localhost:8080 에서 서버 실행중
+
+// 부트스트랩(BootStrap) 설치 
+// 유튜브 
+// 참고 URL - https://youtu.be/iHWlRtWNquA?si=uVzQUkL2QL3a0RI1
+// 참고 2 URL - https://youtu.be/F-v6EcMPJwA?si=GgTOZ1qE5w1m_2lR
+
 
 // 서버 기능(Http - Get) 구현 예시
 // app.get('/어쩌구', (요청, 응답)=>{
@@ -111,8 +132,8 @@ app.get('/data', function(요청, 응답) {
   응답.sendFile(__dirname + '/data.json')
 })
 
-app.get('/', (요청, 응답)=>{
-  응답.sendFile(__dirname + '/index.html')
+app.get('/navbar', function(요청, 응답) {
+  응답.sendFile(__dirname + '/navbar.html')
 })
 
 // 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
