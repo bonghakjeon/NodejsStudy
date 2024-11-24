@@ -24,6 +24,8 @@
 
 // 5강 - 웹페이지에 디자인 넣으려면
 
+// 6강 - MongoDB 호스팅받고 셋팅하기
+
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
 
@@ -57,6 +59,14 @@ app.listen(8080, ()=>{
 // 참고 URL - https://youtu.be/iHWlRtWNquA?si=uVzQUkL2QL3a0RI1
 // 참고 2 URL - https://youtu.be/F-v6EcMPJwA?si=GgTOZ1qE5w1m_2lR
 
+// MongoDB 호스팅받고 셋팅하기 
+// 참고 URL - https://steemit.com/kr/@talkit/009-mongodb-atlas
+// 참고 2 URL - https://www.codeit.kr/tutorials/70/mongodb-atlas
+
+// MongoDB - Document database라고 함.
+// Collection(상위 폴더와 비슷한 개념) 생성 -> 해당 Collection 하위에 document(폴더 하위에 존재하는 파일과 비슷한 개념) 생성
+// -> 특정 document 하위에 데이터를 기록하는 데이터베이스 형식이다.
+// 데이터를 기록할 때, Json(JavaScript object 자료 형식) 데이터 처럼 기록할 수 있다.
 
 // 서버 기능(Http - Get) 구현 예시
 // app.get('/어쩌구', (요청, 응답)=>{
