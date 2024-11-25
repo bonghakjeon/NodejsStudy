@@ -26,6 +26,8 @@
 
 // 6강 - MongoDB 호스팅받고 셋팅하기
 
+// 7강 - MongoDB와 서버 연결하려면
+
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
 
@@ -40,11 +42,33 @@ const app = express() // express 라이브러리 사용
 // 참고 URL - https://coding-yesung.tistory.com/175
 app.use(express.static(__dirname + '/public'));
 
-// 5. 서버 띄우는 코드(app.listen) (내 컴퓨터 Port 하나 오픈하는 문법이다. 이렇게 Port를 오픈해야 다른 컴퓨터가 내 컴퓨터 쪽으로 웹서비스를 연결하여 통신하여 들어올 수 있다.)
-// 서버 띄울 PORT 번호 입력란 (Port 8080)
-app.listen(8080, ()=>{
-  console.log('http://localhost:8080 에서 서버 실행중')
-})
+// 5. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
+// Node.js 서버와 MongoDB 연동 해야 하는 이유
+// 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
+const { MongoClient } = require('mongodb')
+
+let db
+// mongodb 사이트에 회원 가입한 계정에 있는 DB접속URL, DB접속아이디, DB접속비번
+// 참고 URL - https://www.mongodb.com/products/platform/atlas-database
+// DB 접속 URL - (예시) mongodb+srv://DB접속아이디:DB접속비번@cluster0.jea.mongodb.net/?retryWrites=true&w=majority
+const url = 'mongodb+srv://admin:qwer1234@cluster0.fbwgk.mongodb.net/?retryWrites=true&w=majority';
+new MongoClient(url).connect()   // connect() - MongoDB에 접속해줌.
+                    .then((client)=>{ // then() - MongoDB 접속 성공하면 실행 
+                      console.log('DB연결성공')  // 데이터베이스 연결 성공시 터미널창에 로그 기록
+                      db = client.db('forum')   // 데이터베이스 'forum'에 연결
+
+                      // DB 접속 완료 후 서버 띄우기 (서버를 안정적으로 띄우기 위해서 DB 접속 완료 후 처리)
+                      // 6. 서버 띄우는 코드(app.listen) (내 컴퓨터 Port 하나 오픈하는 문법이다. 이렇게 Port를 오픈해야 다른 컴퓨터가 내 컴퓨터 쪽으로 웹서비스를 연결하여 통신하여 들어올 수 있다.)
+                      // 서버 띄울 PORT 번호 입력란 (Port 8080)
+                      app.listen(8080, ()=>{
+                        console.log('http://localhost:8080 에서 서버 실행중')
+                      })
+                    })
+                    .catch((err)=>{
+                      console.log(err) // MongoDB 접속 오류 발생시 터미털창에 오류 로그 기록 
+                    })
+
+
 
 // 터미널 명령어 "npm install -g nodemon" 입력 및 엔터 -> nodemon 라이브러리 설치 완료 
 // 터미널 명령어 "nodemon server.js" 기능 - 소스코드 변경 후 파일저장하면 서버 자동으로 재시작(다시 컴파일 처리)
@@ -115,6 +139,15 @@ app.get('/', function(요청, 응답) {
 app.get('/news', (요청, 응답)=>{
   응답.send('오늘 비옴')
 })
+
+// 서버기능 - MongoDB에 임시 데이터 저장
+// (예시) 데이터베이스 'forum' 하위 데이터 저장 하길 원하는 collection 'post'에 함수 insertOne 호출하여 데이터를 json 데이터 형식({title : '어쩌구'})으로 저장
+// MongoDB 웹사이트 접속 -> 데이터베이스 버튼 "Browse Collections" 클릭 -> 데이터베이스 'forum' 하위 collection 'post' 클릭 -> Document 하나가 새로 발행
+// -> 새로 발행된 Document 안에 위에서 저장한 json 데이터 형식({title : '어쩌구'})이 들어가 있다.
+// app.get('/news', (요청, 응답)=>{
+//   db.collection('post').insertOne({title : '어쩌구'})
+//   응답.send('오늘 비옴')
+// })
 
 // 서버기능 - 쇼핑페이지(Http - Get 방식)
 // 1) 누가 쇼핑페이지 접속시('/shop') (크롬 웹브라우저 실행 -> URL 주소 "http://localhost:8080/shop" 입력 및 엔터)
