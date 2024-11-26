@@ -179,6 +179,34 @@ app.get('/navbar', function(요청, 응답) {
   응답.sendFile(__dirname + '/navbar.html')
 })
 
+// 서버기능 -  MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 화면에 리스트 형식으로 출력  
+// app.get('/list', (요청, 응답) => {
+//   응답.send('안녕')
+// })
+app.get('/list', async (요청, 응답) => {
+  // let result = await db.collection('컬렉션명').find().toArray()   // MongoDB의 특정 '컬렉션명'에 있는 모든 document 데이터 가져오기 
+  // MongoDB의 특정 'post'에 있는 모든 document 데이터 가져오기 
+  let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
+  // 응답.send(result[0].title)
+  console.log(result[0])
+  console.log(result[0].title)
+  console.log(result[1])
+  console.log(result[1].title)
+
+  응답.send(result)
+
+
+  // 함수 .then() 사용해서 MongoDB의 특정 '컬렉션명'에 있는 모든 document 데이터 가져오기 
+  // db.collection('컬렉션명').find().toArray().then((result)=>{
+  //   응답.send(result[0].title)
+  // })
+
+  // 콜백함수((err, result)=>{ ... }) 사용해서 MongoDB의 특정 '컬렉션명'에 있는 모든 document 데이터 가져오기 
+  // db.collection('컬렉션명').find().toArray((err, result)=>{
+  //   응답.send(result[0].title)
+  // })
+})
+
 // 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
 
 // 5. 4번에서 터미널에 출력된 URL 주소 http://localhost:8080 에 마우스 커서 갖다대고 키보드 단축키 Ctrl + 마우스 왼쪽 버튼 클릭
@@ -208,6 +236,25 @@ app.get('/navbar', function(요청, 응답) {
 // ** 자바스크립트 문법(콜백함수) 주의사항 ** 
 // 1) 콜백함수는 맘대로 쓸 수는 없고 콜백함수 쓰라는 곳만 쓸 수 있다.
 // 2) 함수 소괄호 안에 들어가는 함수를 '콜백함수'라고 부른다
+
+// 자바스크립트 문법 array 자료형
+// 용도 - 자바스크립트에서 여러가지 자료들을 변수하나에 저장하고 싶을 때 사용 
+// 아래처럼 변수 a 하나에 여러가지 숫자나 문자를 담아서 보관 가능 
+// (예) let a = [10, 20, 30]
+// array 자료형 인덱싱 
+// array 자료형에서 존재하는 여러가지 자료들 중 원하는 자료만 쏙 빼서 사용하고 싶을 때 쓴다.
+// (예) let a = [10, 20, 30]
+// console.log(a[1])
+
+// 자바스크립트 문법 object 자료형
+// 용도 - object자료형도 똑같이 여러 자료를 변수하나에 넣어두고 싶을 때 사용
+// 아래처럼 변수 b 하나에 여러가지 자료들을 콤마로 구분해서 key : value 형식으로 저장해야함.
+// let b = { name : 'kim', age : 20 }
+// object 자료형 value 출력 
+// 특정 value 하나만 꺼내고 싶으면 object 자료 오른쪽에 점찍고 특정 key이름 넣기 
+// console.log(b.name)
+// 특정 value 하나만 꺼내고 싶으면 object 자료 오른쪽에 대괄호 사용 및 해당 대괄호 안에 특정 key이름 넣기 (['key'])
+// console.log(b['name'])
 
 // 용어 정리 
 // (1) 터미널 명령어 중 "npm"은 라이브러리 설치를 도와주는 보조 프로그램이다. node.js를 설치하면 누구나 npm을 이용할 수 있다.
