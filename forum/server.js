@@ -28,6 +28,8 @@
 
 // 7강 - MongoDB와 서버 연결하려면
 
+// 8강 - MongoDB에서 데이터 출력하기 (array/object 문법)
+
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
 
@@ -91,6 +93,11 @@ new MongoClient(url).connect()   // connect() - MongoDB에 접속해줌.
 // Collection(상위 폴더와 비슷한 개념) 생성 -> 해당 Collection 하위에 document(폴더 하위에 존재하는 파일과 비슷한 개념) 생성
 // -> 특정 document 하위에 데이터를 기록하는 데이터베이스 형식이다.
 // 데이터를 기록할 때, Json(JavaScript object 자료 형식) 데이터 처럼 기록할 수 있다.
+
+// MongoDB 데이터베이스 -> 컬렉션 안에 속한 Document 1개에(엑셀의 데이터 행, 데이터베이스 - 데이터테이블에 속한 데이터 로우와 비슷하다.)  
+// 게시물 100만개 이상 넣을수는 있으나 아래와 같은 단점들이 있다.
+// 1. document에 게시물을 많이 넣으면 원하는 데이터를 찾기 어렵다.
+// 2. document 1개당 최대 16MB 까지만 데이터 저장이 가능하므로 많은 게시물을 저장하는 것은 물리적으로 불가하다.
 
 // 서버 기능(Http - Get) 구현 예시
 // app.get('/어쩌구', (요청, 응답)=>{
@@ -184,19 +191,28 @@ app.get('/navbar', function(요청, 응답) {
 //   응답.send('안녕')
 // })
 app.get('/list', async (요청, 응답) => {
-  // let result = await db.collection('컬렉션명').find().toArray()   // MongoDB의 특정 '컬렉션명'에 있는 모든 document 데이터 가져오기 
-  // MongoDB의 특정 'post'에 있는 모든 document 데이터 가져오기 
+  // let result = await db.collection('컬렉션명').find().toArray()   // MongoDB의 특정 컬렉션 '컬렉션명'에 있는 모든 document 데이터 가져오기  
+
+  // 키워드 await 기능 - 바로 다음줄 실행하지 말고 잠깐 대기 
+  // 키워드 await 사용하는 이유 - 자바스크립트로 작성한 코드들 중 처리가 오래걸리는 코드는 처리완료 기다리지 않고 바로 다음줄 실행하는데 
+  // 이와 같은 상황이 발생하지 않도록 키워드 await을 사용하여 바로 다음줄 실행하지 말고 처리가 오래걸리는 코드가 처리완료 될 때 까지 잠깐 대기 처리 한다.
+  // 키워드 await 주의사항 - 키워드 await은 정해진 곳만 붙여서 사용할 수 있다. (Promise 뱉는 곳만 가능)
+
+  // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
   let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
   // 응답.send(result[0].title)
-  console.log(result[0])
+  // 터미널창에 변수 result에 할당된 데이터 출력 
+  console.log(result[0])   
   console.log(result[0].title)
+  console.log(result[0]['title'])
   console.log(result[1])
   console.log(result[1].title)
+  console.log(result[1]['title'])
 
-  응답.send(result)
+  // 응답.send(result)
+  응답.send(result[0].title)
 
-
-  // 함수 .then() 사용해서 MongoDB의 특정 '컬렉션명'에 있는 모든 document 데이터 가져오기 
+  // 함수 .then() 사용해서 MongoDB의 특정 컬렉션 '컬렉션명'에 있는 모든 document 데이터 가져오기 
   // db.collection('컬렉션명').find().toArray().then((result)=>{
   //   응답.send(result[0].title)
   // })
@@ -205,6 +221,12 @@ app.get('/list', async (요청, 응답) => {
   // db.collection('컬렉션명').find().toArray((err, result)=>{
   //   응답.send(result[0].title)
   // })
+})
+
+app.get('/list', async (요청, 응답)=>{
+  let result = await db.collection('post').find().toArray()   // MongoDB의 특정 컬렉션 'post' 에 있는 모든 document 데이터 가져오기 
+  console.log(result)   // 터미널창에 변수 result에 할당된 데이터 출력 
+  응답.send('DB에 있던 게시물')
 })
 
 // 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
