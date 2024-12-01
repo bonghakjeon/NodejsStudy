@@ -39,12 +39,15 @@
 const express = require('express') // express 라이브러리 사용
 const app = express() // express 라이브러리 사용
 
-// 4. 웹서버에 public 폴더 등록 
+// 4. ejs 템플릿 엔진 사용하기 
+app.set('view engine', 'ejs') 
+
+// 5. 웹서버에 public 폴더 등록 
 // 용도 - public 폴더 안에 있는 static 파일들(.css / 이미지 / .js)을 html 파일 (예) index.html, about.html 등등... 에서 가져다 쓰기 위한 용도 
 // 참고 URL - https://coding-yesung.tistory.com/175
 app.use(express.static(__dirname + '/public'));
 
-// 5. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
+// 6. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
 // Node.js 서버와 MongoDB 연동 해야 하는 이유
 // 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
 const { MongoClient } = require('mongodb')
@@ -223,10 +226,18 @@ app.get('/list', async (요청, 응답) => {
   // })
 })
 
-app.get('/list', async (요청, 응답)=>{
-  let result = await db.collection('post').find().toArray()   // MongoDB의 특정 컬렉션 'post' 에 있는 모든 document 데이터 가져오기 
-  console.log(result)   // 터미널창에 변수 result에 할당된 데이터 출력 
-  응답.send('DB에 있던 게시물')
+app.get('/testlist', async (요청, 응답)=>{
+  let result = await db.collection('post').find().toArray()   // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
+  응답.render('list.ejs', { 글목록 : result })  // 함수 응답.render() 의 둘째 파라미터에 { 작명 : 전송할데이터 } 이런 형식으로 적으면 ejs 파일로 데이터가 전달 (글목록이라는 이름으로 result안에 들어 있는 데이터 전달)
+  // 응답.render('list.ejs')
+})
+
+app.get('/time', async (요청, 응답)=> {
+  // TODO : new Date() 사용하여 현재 날짜와 시간 계산하기 (2024.12.02 jbh)
+  // 참고 URL - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date
+  // 참고 2 URL - https://likedev.tistory.com/entry/Javascript-%ED%98%84%EC%9E%AC-%EB%82%A0%EC%A7%9C-%EC%8B%9C%EA%B0%84-%EA%B5%AC%ED%95%98%EA%B8%B0
+  const currentDate = new Date();
+  응답.render('time.ejs', { 현재서버시간 : currentDate })
 })
 
 // 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
