@@ -232,12 +232,13 @@ app.get('/testlist', async (요청, 응답)=>{
   // 응답.render('list.ejs')
 })
 
-app.get('/time', async (요청, 응답)=> {
+app.get('/time', (요청, 응답)=> {
   // TODO : new Date() 사용하여 현재 날짜와 시간 계산하기 (2024.12.02 jbh)
   // 참고 URL - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date
   // 참고 2 URL - https://likedev.tistory.com/entry/Javascript-%ED%98%84%EC%9E%AC-%EB%82%A0%EC%A7%9C-%EC%8B%9C%EA%B0%84-%EA%B5%AC%ED%95%98%EA%B8%B0
-  const currentDate = new Date();
-  응답.render('time.ejs', { 현재서버시간 : currentDate })
+  // const currentDate = new Date();
+  // 응답.render('time.ejs', { 현재서버시간 : currentDate })
+  응답.render('time.ejs', { data : new Date() })
 })
 
 // 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
