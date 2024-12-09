@@ -30,6 +30,10 @@
 
 // 8강 - MongoDB에서 데이터 출력하기 (array/object 문법)
 
+// 9강 - 웹페이지에 DB데이터 꽂기 (EJS, 서버사이드 렌더링)
+
+// 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
+// 클라이언트사이드 렌더링이란? 서버에서 빈 html 파일과 데이터만 클라이언트로 보내고, 웹브라우저 안에서 서버로 부터 받은 html 파일과 데이터 가지고 동적으로 렌더링 해주는 기술이다. (예) React
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
 
@@ -39,13 +43,16 @@
 const express = require('express') // express 라이브러리 사용
 const app = express() // express 라이브러리 사용
 
-// 4. ejs 템플릿 엔진 사용하기 
-app.set('view engine', 'ejs') 
 
-// 5. 웹서버에 public 폴더 등록 
+// 4. 웹서버에 public 폴더 등록 
 // 용도 - public 폴더 안에 있는 static 파일들(.css / 이미지 / .js)을 html 파일 (예) index.html, about.html 등등... 에서 가져다 쓰기 위한 용도 
 // 참고 URL - https://coding-yesung.tistory.com/175
 app.use(express.static(__dirname + '/public'));
+
+// 5. ejs 템플릿 엔진 사용하기 
+// 웹서버로 부터 받은 데이터를 html 파일에 넣기 위해 ejs 템플릿 엔진 사용 
+// 웹서버로 부터 받은 데이터를 html 파일에 넣으려면 ejs 파일(확장자 .ejs)을 폴더 views 안에서 만들기 
+app.set('view engine', 'ejs') 
 
 // 6. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
 // Node.js 서버와 MongoDB 연동 해야 하는 이유
@@ -203,17 +210,27 @@ app.get('/list', async (요청, 응답) => {
 
   // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
   let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
+  // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
+  // 기본 경로 views 폴더 -> ejs 파일(list.ejs)의 경우 아래처럼 'list.ejs' 이렇게만 작성해도 된다.
+  // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
+  // 1. 아래처럼 ejs 파일('list.ejs')로 데이터 전송({ 글목록 : result })
+  // 2. ejs 파일('list.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
+  응답.render('list.ejs', { 글목록 : result }) 
+
+  // 주의사항 - 아래 주석친 코드처럼 응답을 2번 쓰게 되면 바로 위에 호출한 응답.send만 실행 되므로 둘 중에 하나만 사용해야 함.
   // 응답.send(result[0].title)
+  // 응답.render('list.ejs')
+
   // 터미널창에 변수 result에 할당된 데이터 출력 
-  console.log(result[0])   
-  console.log(result[0].title)
-  console.log(result[0]['title'])
-  console.log(result[1])
-  console.log(result[1].title)
-  console.log(result[1]['title'])
+  // console.log(result[0])   
+  // console.log(result[0].title)
+  // console.log(result[0]['title'])
+  // console.log(result[1])
+  // console.log(result[1].title)
+  // console.log(result[1]['title'])
 
   // 응답.send(result)
-  응답.send(result[0].title)
+  // 응답.send(result[0].title)
 
   // 함수 .then() 사용해서 MongoDB의 특정 컬렉션 '컬렉션명'에 있는 모든 document 데이터 가져오기 
   // db.collection('컬렉션명').find().toArray().then((result)=>{
@@ -226,13 +243,13 @@ app.get('/list', async (요청, 응답) => {
   // })
 })
 
-app.get('/testlist', async (요청, 응답)=>{
-  let result = await db.collection('post').find().toArray()   // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
-  응답.render('list.ejs', { 글목록 : result })  // 함수 응답.render() 의 둘째 파라미터에 { 작명 : 전송할데이터 } 이런 형식으로 적으면 ejs 파일로 데이터가 전달 (글목록이라는 이름으로 result안에 들어 있는 데이터 전달)
-  // 응답.render('list.ejs')
-})
+// app.get('/testlist', async (요청, 응답)=>{
+//   let result = await db.collection('post').find().toArray()   // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
+//   응답.render('list.ejs', { 글목록 : result })  // 함수 응답.render() 의 둘째 파라미터에 { 작명 : 전송할데이터 } 이런 형식으로 적으면 ejs 파일로 데이터가 전달 (글목록이라는 이름으로 result안에 들어 있는 데이터 전달)
+//   // 응답.render('list.ejs')
+// })
 
-app.get('/time', (요청, 응답)=> {
+app.get('/time', (요청, 응답) => {
   // TODO : new Date() 사용하여 현재 날짜와 시간 계산하기 (2024.12.02 jbh)
   // 참고 URL - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date
   // 참고 2 URL - https://likedev.tistory.com/entry/Javascript-%ED%98%84%EC%9E%AC-%EB%82%A0%EC%A7%9C-%EC%8B%9C%EA%B0%84-%EA%B5%AC%ED%95%98%EA%B8%B0
