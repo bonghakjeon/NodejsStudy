@@ -13,29 +13,62 @@
 
 // [코딩애플] Node.js, MongoDB 스터디 
 // Part 1 : (신버전)
-
 // 1강 - 남자라면 서버개발을 할 줄 알아야함
-
 // 2강 - Nodejs의 장점이 뭐냐면
-
 // 3강 - Node.js, Express 설치와 셋팅
-
 // 4강 - 웹페이지 보내주려면 (라우팅)
-
 // 5강 - 웹페이지에 디자인 넣으려면
-
 // 6강 - MongoDB 호스팅받고 셋팅하기
-
 // 7강 - MongoDB와 서버 연결하려면
-
 // 8강 - MongoDB에서 데이터 출력하기 (array/object 문법)
-
 // 9강 - 웹페이지에 DB데이터 꽂기 (EJS, 서버사이드 렌더링)
-
 // 10강 - 여러 글을 한 번에 출력해보자 (EJS 문법2)
+// 11강 - 서버와 유저가 통신하는 법 / RESTful API
+
+// Part 2 (신버전)
+
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
 // 클라이언트사이드 렌더링이란? 서버에서 빈 html 파일과 데이터만 클라이언트로 보내고, 웹브라우저 안에서 서버로 부터 받은 html 파일과 데이터 가지고 동적으로 렌더링 해주는 기술이다. (예) React
+
+// 사용자가 서버에게 무언가 요청 하려면 1) method 2) URL을 정확히 적어서 보내야한다.
+// 요청을 HTTP 요청, method를 HTTP method 라고 부른다.
+// 1) method
+// GET - 사용자가 서버에게 데이터 출력요청 
+// POST - 사용자가 서버에게 데이터 전송(입력)요청
+// UPDATE, PUT - 사용자가 서버에게 데이터 수정요청
+// DELETE - 사용자가 서버에게 데이터 삭제요청
+// 2) URL
+// URL을 다른 말로 엔드포인트(End Point)라고 부른다.
+// 좋은 URL 작명 관습
+// - 동사 보다는 명사 위주로 작성
+// - 띄어쓰기는 언더바(_) 대신 대시(-) 기호 작성 
+// - 파일 확장자 쓰지 말 것(.html 이런거 제외)
+// - 하위 문서들을 뜻할 땐 / 기호를 사용함 (하위폴더 같은 느낌)
+// 좋은 URL 
+// (예시) http Get 요청 URL - facebook.com/bbc/photos (기능 - BBC 뉴스 페이스북 계정 사진 화면에 출력)
+// (예시) http Get 요청 URL - instagram.com/explore/tags/food (기능 - 해시태그 food 검색한 사진 화면에 출력)
+
+// REST API(Restful API)란?
+// representational state transfer를 잘 따르는 API 이다.
+// 그냥 좋은 API 디자인(설계)하는 원칙이라고 이해하면 된다.
+// 원칙은 아래와 같이 6가지로 분류할 수 있다.
+// 1) Uniform Interface (일관성)
+//    - 일관성 있는 URL이 좋음
+//    - 하나의 URL+method(GET, POST, UPDATE, PUT, DELETE)는 하나의 데이터를 보내야 한다.
+// 2) Client-server 구분 
+//    - 사용자에게 서버역할 맡기지 말아야 함.
+//    - 사용자가 데이터를 직접 입출력 또는 수정 및 삭제를 처리하면 안 된다.
+// 3) Stateless 
+//    - http 요청들 끼리 서로 의존성이 있으면 안 된다.
+//    - http 요청들 끼리 서로 독립적으로 처리되야 한다.
+// 4) Cacheability
+//    - http 요청을 통해 서버로 보내는 데이터들은 캐싱이 가능해야 한다. (예) 자주 서버로 부터 수신되는 데이터들은 서버로 http 요청을 날리지 않고 웹브라우저에서 하드에 저장해놓고 쓴다.
+// 5) Layered system
+//    - http 요청 하나는 최종 응답 전가지 여러 단계를 거쳐도 된다.
+// 6) Code on demand
+//    - 서버는 유저에게 실행 가능한 코드를 보내줄 수도 있다.
+
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
 
@@ -111,7 +144,7 @@ new MongoClient(url).connect()   // connect() - MongoDB에 접속해줌.
 // 1. document에 게시물을 많이 넣으면 원하는 데이터를 찾기 어렵다.
 // 2. document 1개당 최대 16MB 까지만 데이터 저장이 가능하므로 많은 게시물을 저장하는 것은 물리적으로 불가하다.
 
-// 서버 기능(Http - Get) 구현 예시
+// 서버기능 (Rest API) (Http - Get) 구현 예시
 // app.get('/어쩌구', (요청, 응답)=>{
 //   응답.send('보내줄 웹페이지 내용')
 // }) 
@@ -150,7 +183,7 @@ app.get('/', function(요청, 응답) {
   응답.sendFile(__dirname + '/index.html')
 })
 
-// 서버기능 - 오늘의 뉴스(Http - Get 방식) 
+// 서버기능 (Rest API) - 오늘의 뉴스(Http - Get 방식) 
 // 1) 누가 오늘의 뉴스 페이지 접속('/news') (크롬 웹브라우저 실행 -> URL 주소 "http://localhost:8080/news" 입력 및 엔터)
 // 2) 자동으로 함수 "app.get()" 실행 -> 접속요청 처리
 // 3) 2)번의 함수 "app.get()" 실행되고 나서 -> 2)번의 함수 "app.get()" 소괄호() 안에 존재하는 콜백함수 "(요청, 응답) => { 응답.send('오늘 비옴') }" 내에 있는 코드 "응답.send('오늘 비옴')" 가 실행
@@ -159,7 +192,7 @@ app.get('/news', (요청, 응답)=>{
   응답.send('오늘 비옴')
 })
 
-// 서버기능 - MongoDB에 임시 데이터 저장
+// 서버기능 (Rest API) - MongoDB에 임시 데이터 저장
 // (예시) 데이터베이스 'forum' 하위 데이터 저장 하길 원하는 collection 'post'에 함수 insertOne 호출하여 데이터를 json 데이터 형식({title : '어쩌구'})으로 저장
 // MongoDB 웹사이트 접속 -> 데이터베이스 버튼 "Browse Collections" 클릭 -> 데이터베이스 'forum' 하위 collection 'post' 클릭 -> Document 하나가 새로 발행
 // -> 새로 발행된 Document 안에 위에서 저장한 json 데이터 형식({title : '어쩌구'})이 들어가 있다.
@@ -168,7 +201,7 @@ app.get('/news', (요청, 응답)=>{
 //   응답.send('오늘 비옴')
 // })
 
-// 서버기능 - 쇼핑페이지(Http - Get 방식)
+// 서버기능 (Rest API) - 쇼핑페이지(Http - Get 방식)
 // 1) 누가 쇼핑페이지 접속시('/shop') (크롬 웹브라우저 실행 -> URL 주소 "http://localhost:8080/shop" 입력 및 엔터)
 // 2) '쇼핑페이지입니다' 문자열을 유저에게 보내주기 (크롬 웹브라우저 화면 '쇼핑페이지입니다~' 문자열 출력)
 app.get('/shop', (요청, 응답)=>{
@@ -184,7 +217,7 @@ app.get('/about', function(요청, 응답) {
   응답.sendFile(__dirname + '/about.html')
 })
 
-// 서버기능 - 상품목록 json 데이터 전송(Http - Get 방식)
+// 서버기능 (Rest API) - 상품목록 json 데이터 전송(Http - Get 방식)
 // 1) 누가 상품목록 json 데이터 접속(요청)('/data') (크롬 웹브라우저 실행 -> URL 주소 "http://localhost:8080/data" 입력 및 엔터 )
 // 2) 자동으로 함수 "app.get()" 실행 -> 접속요청 처리
 // 3) 2)번의 함수 "app.get()" 실행되고 나서 -> 2)번의 함수 "app.get()" 소괄호() 안에 존재하는 
@@ -198,7 +231,7 @@ app.get('/navbar', function(요청, 응답) {
   응답.sendFile(__dirname + '/navbar.html')
 })
 
-// 서버기능 -  MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 화면에 리스트 형식으로 출력  
+// 서버기능 (Rest API) - MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 화면에 리스트 형식으로 출력  
 // app.get('/list', (요청, 응답) => {
 //   응답.send('안녕')
 // })
@@ -250,7 +283,7 @@ app.get('/list', async (요청, 응답) => {
 //   응답.render('list.ejs', { 글목록 : result })  // 함수 응답.render() 의 둘째 파라미터에 { 작명 : 전송할데이터 } 이런 형식으로 적으면 ejs 파일로 데이터가 전달 (글목록이라는 이름으로 result안에 들어 있는 데이터 전달)
 //   // 응답.render('list.ejs')
 // })
-
+// 서버기능 (Rest API) - 현재서버시간 화면에 출력 
 app.get('/time', (요청, 응답) => {
   // TODO : new Date() 사용하여 현재 날짜와 시간 계산하기 (2024.12.02 jbh)
   // 참고 URL - https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Date
