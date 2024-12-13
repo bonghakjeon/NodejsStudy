@@ -89,7 +89,12 @@ app.use(express.static(__dirname + '/public'));
 // 웹서버로 부터 받은 데이터를 html 파일에 넣으려면 ejs 파일(확장자 .ejs)을 폴더 views 안에서 만들기 
 app.set('view engine', 'ejs') 
 
-// 6. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
+// 6. 사용자가 서버로 보낸 정보(데이터) 검사 및 출력 설정 
+// 사용자가 <input> 태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있다.
+app.use(express.json())
+app.use(express.urlencoded({extended:true})) 
+
+// 7. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
 // Node.js 서버와 MongoDB 연동 해야 하는 이유
 // 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
 const { MongoClient } = require('mongodb')
@@ -158,6 +163,12 @@ new MongoClient(url).connect()   // connect() - MongoDB에 접속해줌.
 // 2. 함수 app.get() 소괄호() 안에 들어가는 함수 "(요청, 응답)=>{ 응답.send('반갑다') }" 를 콜백함수라고 부르고 코드들을 순차적으로 실행할 때 가끔 씁니다.  
 
 // 3. html파일 보내고 싶으면 응답.sendFile() 쓰면 됩니다. 
+
+// 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
+
+// 5. 4번에서 터미널에 출력된 URL 주소 http://localhost:8080 에 마우스 커서 갖다대고 키보드 단축키 Ctrl + 마우스 왼쪽 버튼 클릭
+
+// 6. 크롬 웹브라우저 실행 -> '반갑다' 문자열 웹브라우저 출력 
 
 // 간단한 서버 기능 - 메인페이지1 (Http - Get 방식) 
 // 1) 누가 메인페이지 접속시('/') (크롬 웹브라우저 실행 -> URL 주소 "http://localhost:8080" 입력 및 엔터 )
@@ -293,11 +304,21 @@ app.get('/time', (요청, 응답) => {
   응답.render('time.ejs', { data : new Date() })
 })
 
-// 4. sever.js 파일 저장 및 터미널 명령어 "node server.js" 입력 및 엔터 -> "server.js" 파일 실행 -> 서버 띄우기 완료 -> 터미널 창에 문자열 'http://localhost:8080 에서 서버 실행중' 출력 
+// 서버기능 (Rest API) - 글작성 페이지(write.ejs) 화면에 출력 
+app.get('/write', (요청, 응답) => {
+  응답.render('write.ejs')
+})
 
-// 5. 4번에서 터미널에 출력된 URL 주소 http://localhost:8080 에 마우스 커서 갖다대고 키보드 단축키 Ctrl + 마우스 왼쪽 버튼 클릭
-
-// 6. 크롬 웹브라우저 실행 -> '반갑다' 문자열 웹브라우저 출력 
+// 서버기능 (Rest API) - 글작성 페이지(write.ejs)에서 작성한 글을 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+app.post('/add', (요청, 응답)=>{
+  console.log(요청.body)   // 사용자가 <input>태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있다.
+  // 사용자가 <input>태그에서 작성하여 서버로 보낸 정보(데이터) MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+  // 참고 URL - https://www.mongodb.com/ko-kr/docs/manual/reference/method/db.collection.insertOne/
+  // 참고 2 URL - https://velog.io/@zxc886/Node.js-Express-MongoDB%EC%82%AC%EC%9A%A9%ED%95%98%EC%97%AC-DB%EC%A0%80%EC%9E%A5%ED%95%98%EA%B8%B0-.1
+  db.collection('post').insertOne({ title: 요청.body.title, content: 요청.body.content }, function(){
+    console.log('저장완료');
+  });
+}) 
 
 // 자바스크립트 문법 반복문 for문 설명 
 // for(let i = 0; i < 3; i++) {
