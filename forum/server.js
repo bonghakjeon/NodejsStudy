@@ -26,6 +26,7 @@
 // 11강 - 서버와 유저가 통신하는 법 / RESTful API
 
 // Part 2 (신버전)
+// 12강 - 글 작성기능 만들기 1 (POST 요청)
 
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
@@ -90,7 +91,8 @@ app.use(express.static(__dirname + '/public'));
 app.set('view engine', 'ejs') 
 
 // 6. 사용자가 서버로 보낸 정보(데이터) 검사 및 출력 설정 
-// 사용자가 <input> 태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있다.
+// 사용자가 <input> 태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 
+// 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있도록 하기 위해 아래처럼 설정할 수 있는 코드 2줄을 추가한다.
 app.use(express.json())
 app.use(express.urlencoded({extended:true})) 
 
@@ -309,9 +311,17 @@ app.get('/write', (요청, 응답) => {
   응답.render('write.ejs')
 })
 
-// 서버기능 (Rest API) - 글작성 페이지(write.ejs)에서 작성한 글을 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+// 서버기능 (Rest API) - 글작성 페이지(write.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+// 글 작성기능 명세서
+// 1. 글작성 페이지(write.ejs)에서 글써서 서버로 전송 
+// 2. 서버는 글을 검사 
+// 3. 이상 없으면 DB에 저장 
 app.post('/add', (요청, 응답)=>{
-  console.log(요청.body)   // 사용자가 <input>태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있다.
+  // 사용자가 <input>태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있다.
+  // 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있도록 하기 위해 서버 파일(server.js) 상단에 아래 주석친 코드 처럼 설정할 수 있는 코드 2줄을 추가한다.
+  // app.use(express.json())
+  // app.use(express.urlencoded({extended:true})) 
+  console.log(요청.body)   
   // 사용자가 <input>태그에서 작성하여 서버로 보낸 정보(데이터) MongoDB의 특정 컬렉션 'post'에 데이터 저장 
   // 참고 URL - https://www.mongodb.com/ko-kr/docs/manual/reference/method/db.collection.insertOne/
   // 참고 2 URL - https://velog.io/@zxc886/Node.js-Express-MongoDB%EC%82%AC%EC%9A%A9%ED%95%98%EC%97%AC-DB%EC%A0%80%EC%9E%A5%ED%95%98%EA%B8%B0-.1

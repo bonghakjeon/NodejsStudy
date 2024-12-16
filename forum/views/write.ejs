@@ -19,12 +19,22 @@
   <link href="/main.css" rel="stylesheet">
 </head>
 <body>
+  <%- include('nav.ejs') %>
+
+  <!--  <form> 태그 사용하여 서버 URL 주소 "/add" POST 요청 하는 방법  -->
   <!--  글작성 웹페이지(write.ejs)에서 작성 글을 서버로 전송(http - 'POST')하기 위하여 아래처럼 action 속성에 URL 주소 "/add" 할당 및 method 속성에 'POST' 방식으로 요청  -->
   <form class="form-box" action="/add" method="POST">
     <h4>글쓰기</h4>
+    <!--  아래 <input> 태그들은 <form> 태그 안에 구현해야 한다.  -->
+    <!--  아래처럼 <input> 태그안에 name 속성 및 값을 할당해서 사용해야 <input> 태그에 입력한 값들을 서버로 전송 가능  -->
     <input name="title">
     <input name="content">
     <button type="submit">전송</button>
+    <!--  <input> 태그 사용 예시  -->
+    <!--  <input type="checkbox">  -->
+    <!--  <input type="email">  -->
+    <!--  <input type="password">  -->
+    <!--  <input type="text">  -->
   </form> 
 
   <!--  주의사항 - 아래 <script> 태그는 <body> 태그 가장 아래에 위치 해야함.  -->
