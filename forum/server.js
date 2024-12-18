@@ -27,6 +27,7 @@
 
 // Part 2 (신버전)
 // 12강 - 글 작성기능 만들기 1 (POST 요청)
+// 13강 - 글 작성기능 만들기 2 (insertOne, 예외 처리)
 
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
@@ -324,9 +325,10 @@ app.get('/write', (요청, 응답) => {
   응답.render('write.ejs')
 })
 
-// 서버기능 (Rest API) - 글작성 페이지(write.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+
+// 서버기능 (Rest API) - 글작성 웹페이지(write.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
 // 글 작성기능 명세서
-// 1. 글작성 페이지(write.ejs)에서 글써서 서버로 전송 
+// 1. 글작성 페이지(write.ejs)에서 글써서 서버로 전송 (<form> 태그 사용 및 POST 요청 기능 구현)
 // 2. 서버는 글을 검사 
 // 3. 이상 없으면 DB에 저장 
 app.post('/add', async (요청, 응답)=>{
@@ -342,23 +344,24 @@ app.post('/add', async (요청, 응답)=>{
   try {
     // 제목(title) 유효성 검사 
     if('' === 요청.body.title) {
-      응답.send('제목안적었는데')   // 제목(title)이 공백('')일 시 웹브라우저 화면으로 메시지 '제목안적었는데' 보내기
+      응답.send('제목입력안했는데?')   // 제목(title)이 공백('')일 시 웹브라우저 화면으로 메시지 '제목입력안했는데?' 보내기
     } else {
       console.log(요청.body)
       await db.collection('post').insertOne({ title : 요청.body.title, content : 요청.body.content })
-      // MongoDB 컬렉션 'post'에 데이터 저장 완료시 웹브라우저 화면으로 메시지 '작성완료' 보내기 
+      // MongoDB 컬렉션 'post'에 데이터 저장 완료시(서버 기능 실행 끝나면) 웹브라우저 화면으로 메시지 '작성완료' 보내기 
       // 응답.send('작성완료')  
-      // MongoDB 컬렉션 'post'에 데이터 저장 완료시 다른 페이지(list.ejs)로 강제로 이동 처리 
+      // MongoDB 컬렉션 'post'에 데이터 저장 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
       응답.redirect('/list')
     }
   } catch (e) {
-    console.log(e)
-    응답.send('DB에러남')
+    console.log(e)   // 에러 메시지 출력
+    // 응답.send('DB에러남')
+    응답.status(500).send('서버에러남')  // status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻
   }   
   
   // MongoDB 컬렉션 'post'에 데이터 저장 코드 예시 
   // 아래 주석친 코드 (예시1) 처럼 코드를 구현하면 컬렉션 'post'에 새로운 document를 하나 만들어서 이 저장할데이터를 새로운 document 안에 기록
-  // 데이터는 object 자료형식으로 추가함. 
+  // 데이터는 JSON(JavaScript Object) 자료형식으로 추가함. 
   // (예시1) await db.collection('post').insertOne(저장할데이터)
   // 아래 주석친 코드 (예시2) 처럼 코드를 구현하면 컬렉션 'post'에 새로운 document를 하나 만들어서 컬럼 'a'에 데이터 값 '1'을 새로운 document 안에 기록
   // (예시2) await db.collection('post').insertOne({ a : 1 }) 
@@ -375,6 +378,46 @@ app.post('/add', async (요청, 응답)=>{
   //   console.log('저장완료');
   // });
 }) 
+
+// 서버기능 (Rest API) - 글작성 테스트 페이지(test.ejs) 화면에 출력 
+app.get('/test', (요청, 응답)=>{
+  응답.render('test.ejs')
+})
+
+// 서버기능 (Rest API) - MongoDB의 특정 "컬렉션(test)"에 있는 모든 document 데이터 가져와서 화면에 리스트 형식으로 출력 
+app.get('/test/list', async (요청, 응답)=> {
+  try {
+    let result = await db.collection('test').find().toArray()
+    응답.render('testlist.ejs', { 글목록 : result })
+  } catch(e) {
+    console.log(e)
+    응답.send('DB에러남')
+  }
+})
+
+
+// 서버기능 (Rest API) - 글작성 테스트 웹페이지(test.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'test'에 데이터 저장 
+// 글 작성기능 명세서
+// 1. 글작성 페이지(test.ejs)에서 글써서 서버로 전송 (<form> 태그 사용 및 POST 요청 기능 구현)
+// 2. 서버는 글을 검사 
+// 3. 이상 없으면 DB에 저장 
+app.post('/test/add', async (요청, 응답)=>{
+
+  try {
+    // 회사명(company) 유효성 검사
+    if('' === 요청.body.company) {
+      응답.send('회사명입력안했는데?')   // 회사명(company)이 공백('')일 시 웹브라우저 화면으로 메시지 '회사명입력안했는데?' 보내기
+    } else {
+      console.log(요청.body)
+      await db.collection('test').insertOne({ company: 요청.body.company, personName: 요청.body.personName, phoneNumber: 요청.body.phoneNumber })
+      응답.redirect('/test/list')
+    }
+  } catch(e) {
+    console.log(e)   // 에러 메시지 출력
+    // 응답.send('DB에러남')
+    응답.status(500).send('서버에러남')  // status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻
+  }
+})
 
 // 자바스크립트 문법 반복문 for문 설명 
 // for(let i = 0; i < 3; i++) {
