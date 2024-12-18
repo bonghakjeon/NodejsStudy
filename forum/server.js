@@ -249,21 +249,34 @@ app.get('/navbar', function(요청, 응답) {
 //   응답.send('안녕')
 // })
 app.get('/list', async (요청, 응답) => {
-  // let result = await db.collection('컬렉션명').find().toArray()   // MongoDB의 특정 컬렉션 '컬렉션명'에 있는 모든 document 데이터 가져오기  
+  // try - catch 문법이란?
+  // 이건 try 안에 있는 코드가 뭔가 오류발생하면 catch 안에있는 코드를 대신 실행해주는 유용한 문법이다.
+  // try - catch 문법 사용 이유?
+  // MongoDB 컬렉션 'post'에 데이터 저장하려고 할 때, 
+  // 1) DB가 다운되어서 통신 불가 
+  // 2) DB에 뭔가 저장하려는데 _id(primary key와 비슷함.)가 똑같은게 있어서 오류 발생 
+  // 하여 오류가 발생하는 경우에 특정 코드를 실행하고 싶으면 try - catch 문법 사용하면 된다.
 
-  // 키워드 await 기능 - 바로 다음줄 실행하지 말고 잠깐 대기 
-  // 키워드 await 사용하는 이유 - 자바스크립트로 작성한 코드들 중 처리가 오래걸리는 코드는 처리완료 기다리지 않고 바로 다음줄 실행하는데 
-  // 이와 같은 상황이 발생하지 않도록 키워드 await을 사용하여 바로 다음줄 실행하지 말고 처리가 오래걸리는 코드가 처리완료 될 때 까지 잠깐 대기 처리 한다.
-  // 키워드 await 주의사항 - 키워드 await은 정해진 곳만 붙여서 사용할 수 있다. (Promise 뱉는 곳만 가능)
+  try {
+    // let result = await db.collection('컬렉션명').find().toArray()   // MongoDB의 특정 컬렉션 '컬렉션명'에 있는 모든 document 데이터 가져오기  
 
-  // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
-  let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
-  // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
-  // 기본 경로 views 폴더 -> ejs 파일(list.ejs)의 경우 아래처럼 'list.ejs' 이렇게만 작성해도 된다.
-  // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
-  // 1. 아래처럼 ejs 파일('list.ejs')로 데이터 전송({ 글목록 : result })
-  // 2. ejs 파일('list.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
-  응답.render('list.ejs', { 글목록 : result }) 
+    // 키워드 await 기능 - 바로 다음줄 실행하지 말고 잠깐 대기 
+    // 키워드 await 사용하는 이유 - 자바스크립트로 작성한 코드들 중 처리가 오래걸리는 코드는 처리완료 기다리지 않고 바로 다음줄 실행하는데 
+    // 이와 같은 상황이 발생하지 않도록 키워드 await을 사용하여 바로 다음줄 실행하지 말고 처리가 오래걸리는 코드가 처리완료 될 때 까지 잠깐 대기 처리 한다.
+    // 키워드 await 주의사항 - 키워드 await은 정해진 곳만 붙여서 사용할 수 있다. (Promise 뱉는 곳만 가능)
+
+    // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
+    let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
+    // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
+    // 기본 경로 views 폴더 -> ejs 파일(list.ejs)의 경우 아래처럼 'list.ejs' 이렇게만 작성해도 된다.
+    // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
+    // 1. 아래처럼 ejs 파일('list.ejs')로 데이터 전송({ 글목록 : result })
+    // 2. ejs 파일('list.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
+    응답.render('list.ejs', { 글목록 : result }) 
+  } catch (e) {
+    console.log(e)
+    응답.send('DB에러남')
+  } 
 
   // 주의사항 - 아래 주석친 코드처럼 응답을 2번 쓰게 되면 바로 위에 호출한 응답.send만 실행 되므로 둘 중에 하나만 사용해야 함.
   // 응답.send(result[0].title)
@@ -316,18 +329,51 @@ app.get('/write', (요청, 응답) => {
 // 1. 글작성 페이지(write.ejs)에서 글써서 서버로 전송 
 // 2. 서버는 글을 검사 
 // 3. 이상 없으면 DB에 저장 
-app.post('/add', (요청, 응답)=>{
+app.post('/add', async (요청, 응답)=>{
+
+  // try - catch 문법이란?
+  // 이건 try 안에 있는 코드가 뭔가 오류발생하면 catch 안에있는 코드를 대신 실행해주는 유용한 문법이다.
+  // try - catch 문법 사용 이유?
+  // MongoDB 컬렉션 'post'에 데이터 저장하려고 할 때, 
+  // 1) DB가 다운되어서 통신 불가 
+  // 2) DB에 뭔가 저장하려는데 _id(primary key와 비슷함.)가 똑같은게 있어서 오류 발생 
+  // 하여 오류가 발생하는 경우에 특정 코드를 실행하고 싶으면 try - catch 문법 사용하면 된다.
+
+  try {
+    // 제목(title) 유효성 검사 
+    if('' === 요청.body.title) {
+      응답.send('제목안적었는데')   // 제목(title)이 공백('')일 시 웹브라우저 화면으로 메시지 '제목안적었는데' 보내기
+    } else {
+      console.log(요청.body)
+      await db.collection('post').insertOne({ title : 요청.body.title, content : 요청.body.content })
+      // MongoDB 컬렉션 'post'에 데이터 저장 완료시 웹브라우저 화면으로 메시지 '작성완료' 보내기 
+      // 응답.send('작성완료')  
+      // MongoDB 컬렉션 'post'에 데이터 저장 완료시 다른 페이지(list.ejs)로 강제로 이동 처리 
+      응답.redirect('/list')
+    }
+  } catch (e) {
+    console.log(e)
+    응답.send('DB에러남')
+  }   
+  
+  // MongoDB 컬렉션 'post'에 데이터 저장 코드 예시 
+  // 아래 주석친 코드 (예시1) 처럼 코드를 구현하면 컬렉션 'post'에 새로운 document를 하나 만들어서 이 저장할데이터를 새로운 document 안에 기록
+  // 데이터는 object 자료형식으로 추가함. 
+  // (예시1) await db.collection('post').insertOne(저장할데이터)
+  // 아래 주석친 코드 (예시2) 처럼 코드를 구현하면 컬렉션 'post'에 새로운 document를 하나 만들어서 컬럼 'a'에 데이터 값 '1'을 새로운 document 안에 기록
+  // (예시2) await db.collection('post').insertOne({ a : 1 }) 
+
   // 사용자가 <input>태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있다.
   // 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있도록 하기 위해 서버 파일(server.js) 상단에 아래 주석친 코드 처럼 설정할 수 있는 코드 2줄을 추가한다.
   // app.use(express.json())
   // app.use(express.urlencoded({extended:true})) 
-  console.log(요청.body)   
+  // console.log(요청.body)   
   // 사용자가 <input>태그에서 작성하여 서버로 보낸 정보(데이터) MongoDB의 특정 컬렉션 'post'에 데이터 저장 
   // 참고 URL - https://www.mongodb.com/ko-kr/docs/manual/reference/method/db.collection.insertOne/
   // 참고 2 URL - https://velog.io/@zxc886/Node.js-Express-MongoDB%EC%82%AC%EC%9A%A9%ED%95%98%EC%97%AC-DB%EC%A0%80%EC%9E%A5%ED%95%98%EA%B8%B0-.1
-  db.collection('post').insertOne({ title: 요청.body.title, content: 요청.body.content }, function(){
-    console.log('저장완료');
-  });
+  // await db.collection('post').insertOne({ title: 요청.body.title, content: 요청.body.content }, function(){
+  //   console.log('저장완료');
+  // });
 }) 
 
 // 자바스크립트 문법 반복문 for문 설명 
