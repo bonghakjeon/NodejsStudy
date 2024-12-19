@@ -71,6 +71,14 @@
 // 6) Code on demand
 //    - 서버는 유저에게 실행 가능한 코드를 보내줄 수도 있다.
 
+// TODO : 오류 메시지 "[DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead. (Use `node --trace-deprecation ...` to show where the warning was created)"
+//        원인 파악 결과 NODE 20.2.0 버전 설치 후 발생한 오류로 확인(코어 모듈에서 지원하지 않음)
+//        해당 오류의 원인은 Node.js의 최신 버전에서 더이상 punycode 모듈 사용 안해서 발생한 오류로 확인
+//        하여 해당 오류를 해결하기 위해서는 Node.js 버전을 (기존) 21버전 -> (변경) 20버전 으로 다운그레이드 필요함. 
+//        필요시 Node.js 버전을 20버전으로 다운 그레이드 처리 예정 (2024.12.19 jbh)
+// 참고 URL - https://naitas.tistory.com/entry/The-punycode-module-is-deprecated
+// 참고 2 URL - https://jobchannel.tistory.com/entry/Nodejs%EC%97%90%EC%84%9C-punycode-DeprecationWarning-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0
+// 참고 3 URL - https://www.php.cn/ko/faq/1796584316.html
 
 // 1. 터미널 명령어 "npm init -y" 입력 및 엔터 -> package.json 파일 생성 
 
@@ -101,6 +109,11 @@ app.use(express.urlencoded({extended:true}))
 // Node.js 서버와 MongoDB 연동 해야 하는 이유
 // 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
 const { MongoClient } = require('mongodb')
+
+// 8. 아래 주석친 코드 중 new ObjectId('64bfde3b02d2932a4c06ffba') 사용하기 위해서 아래 const { ObjectId } = require('mongodb') 코드 구현 
+// let result = await db.collection('post').findOne({_id : new ObjectId('64bfde3b02d2932a4c06ffba')}) 
+const { ObjectId } = require('mongodb') 
+
 
 let db
 // mongodb 사이트에 회원 가입한 계정에 있는 DB접속URL, DB접속아이디, DB접속비번
@@ -358,7 +371,7 @@ app.post('/add', async (요청, 응답)=>{
     // 응답.send('DB에러남')
     응답.status(500).send('서버에러남')  // status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻
   }   
-  
+
   // MongoDB 컬렉션 'post'에 데이터 저장 코드 예시 
   // 아래 주석친 코드 (예시1) 처럼 코드를 구현하면 컬렉션 'post'에 새로운 document를 하나 만들어서 이 저장할데이터를 새로운 document 안에 기록
   // 데이터는 JSON(JavaScript Object) 자료형식으로 추가함. 
@@ -378,6 +391,42 @@ app.post('/add', async (요청, 응답)=>{
   //   console.log('저장완료');
   // });
 }) 
+
+// TODO : URL 파라미터 문법 사용하여 URL 입력란에 ":~~~~" 이런 식으로 URL 주소 추가 구현 (2024.12.19 jbh)
+//        사용자가 URL 주소 "/detail/아무문자"로 접속하면 아래 Rest API 기능 app.get('/detail/:aaaa', (요청, 응답)=>{ ... })  실행  
+// 참고 URL - https://dawonny.tistory.com/273
+/// <summary>
+/// 서버기능 (Rest API) - 상세 웹페이지(detail.ejs) 웹브라우저 화면 출력 
+/// </summary>
+app.get('/detail/:id', async (요청, 응답) => {
+  try {
+    console.log(요청.params.id)   // 사용자가 URL 파라미터에 입력한 id 값(데이터) object 자료형으로 출력  
+
+    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 { _id : 사용자가 URL 파라미터에 입력한 id 값 } 인 특정 document 가져오기(출력하기)
+    let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.id)})
+
+    // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
+    // 기본 경로 views 폴더 -> ejs 파일(detail.ejs)의 경우 아래처럼 'detail.ejs' 이렇게만 작성해도 된다.
+    // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
+    // 1. 아래처럼 ejs 파일('detail.ejs')로 데이터 전송({ 글목록 : result })
+    // 2. ejs 파일('detail.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
+    응답.render('detail.ejs', { 글목록 : result })
+
+    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 데이터가 "{a : 1}"인 특정 document 가져오기(출력하기)
+    // 단, 데이터가 "{a : 1}" 중복된 document들이 존재할 경우 그 중에 맨 위에 있는(가장 먼저 저장된 document) document 한개만 가져오기(출력하기)
+    // let result = await db.collection().findOne({a : 1}) 
+
+    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 '64bfde3b02d2932a4c06ffba'인 특정 document 가져오기(출력하기)
+    // let result = await db.collection('post').findOne({_id : new ObjectId('64bfde3b02d2932a4c06ffba')}) 
+
+    // 응답.send('detail.ejs')
+    
+  } catch(e) {
+    console.log(e)   // 에러 메시지 출력
+    // 응답.send('DB에러남')
+    응답.status(500).send('서버에러남')  // status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻
+  }
+})
 
 // 서버기능 (Rest API) - 글작성 테스트 페이지(test.ejs) 화면에 출력 
 app.get('/test', (요청, 응답)=>{
@@ -418,6 +467,7 @@ app.post('/test/add', async (요청, 응답)=>{
     응답.status(500).send('서버에러남')  // status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻
   }
 })
+
 
 // 자바스크립트 문법 반복문 for문 설명 
 // for(let i = 0; i < 3; i++) {
