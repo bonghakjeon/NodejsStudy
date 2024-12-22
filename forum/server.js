@@ -28,6 +28,7 @@
 // Part 2 (신버전)
 // 12강 - 글 작성기능 만들기 1 (POST 요청)
 // 13강 - 글 작성기능 만들기 2 (insertOne, 예외 처리)
+// 14강 - 상세페이지 만들기 1 (URL parameter)
 
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
@@ -108,11 +109,10 @@ app.use(express.urlencoded({extended:true}))
 // 7. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
 // Node.js 서버와 MongoDB 연동 해야 하는 이유
 // 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
-const { MongoClient } = require('mongodb')
-
 // 8. 아래 주석친 코드 중 new ObjectId('64bfde3b02d2932a4c06ffba') 사용하기 위해서 아래 const { ObjectId } = require('mongodb') 코드 구현 
 // let result = await db.collection('post').findOne({_id : new ObjectId('64bfde3b02d2932a4c06ffba')}) 
-const { ObjectId } = require('mongodb') 
+const { MongoClient, ObjectId } = require('mongodb')
+// const { ObjectId } = require('mongodb') 
 
 
 let db
@@ -400,10 +400,14 @@ app.post('/add', async (요청, 응답)=>{
 /// </summary>
 app.get('/detail/:id', async (요청, 응답) => {
   try {
+    console.log(요청.params)
     console.log(요청.params.id)   // 사용자가 URL 파라미터에 입력한 id 값(데이터) object 자료형으로 출력  
 
-    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 { _id : 사용자가 URL 파라미터에 입력한 id 값 } 인 특정 document 가져오기(출력하기)
+    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져오기(출력하기)
     let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.id)})
+    console.log(result)
+
+    // let result = await db.collection('post').find().toArray()  // MongoDB 컬렉션 'post'에 있는 모든 document 가져오기
 
     // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
     // 기본 경로 views 폴더 -> ejs 파일(detail.ejs)의 경우 아래처럼 'detail.ejs' 이렇게만 작성해도 된다.

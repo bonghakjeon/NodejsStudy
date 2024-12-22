@@ -20,7 +20,13 @@
   <!--  app.use(express.static(__dirname + '/public'));  -->
   <link href="/main.css" rel="stylesheet">
 </head>
-<body>
+<body class="grey-bg">
+  <!--  include() 사용하여 다른 ejs 파일(nav.ejs)안에 들어있는 html 코드를 list.ejs 파일에 복사(첨부)하여 화면에 출력  -->
+  <!--  <%- %> 사용하면 그 안에 들어있는게 html인 경우 그걸 실제로 렌더링 처리해서 화면 출력  -->
+  <!--  <%= %> 사용하면 그 안에 들어있는게 html이어도 그걸 렌더링해주진 않고 일반 문자처럼 화면 출력 -->
+  <!--  아래처럼 include() 안에 { age : 20 } 작성하면 다른 ejs 파일(nav.ejs)로 데이터 전송  -->
+  <%- include('nav.ejs') %>
+  
   <div class="detail-bg">
     <h4><%= 글목록.title %></h4>
     <p><%= 글목록.content %></p>
