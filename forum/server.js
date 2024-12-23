@@ -29,6 +29,7 @@
 // 12강 - 글 작성기능 만들기 1 (POST 요청)
 // 13강 - 글 작성기능 만들기 2 (insertOne, 예외 처리)
 // 14강 - 상세페이지 만들기 1 (URL parameter)
+// 15강 - 상세페이지 만들기 2 (링크 만들기)
 
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
@@ -398,6 +399,7 @@ app.post('/add', async (요청, 응답)=>{
 /// <summary>
 /// 서버기능 (Rest API) - 상세 웹페이지(detail.ejs) 웹브라우저 화면 출력 
 /// </summary>
+// app.get('/detail/:id/:id2/:id3', async (요청, 응답)=>{  // URL 파라미터 여러개(:id/:id2/:id3) 작성 가능
 app.get('/detail/:id', async (요청, 응답) => {
   try {
     console.log(요청.params)
@@ -405,16 +407,20 @@ app.get('/detail/:id', async (요청, 응답) => {
 
     // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져오기(출력하기)
     let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.id)})
-    console.log(result)
-
+    if(result == null) {
+      응답.status(400).send('그런 글 없음')   // 사용자가 확인할 수 있도록 오류 상태코드(400 - 웹브라우저 console 창에 출력), 메시지 '그런 글 없음' 전송 - status(400)은 사용자 잘못으로 인한 에러라는 뜻 (예) status(404), status(4XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    } else {
+      // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
+      // 기본 경로 views 폴더 -> ejs 파일(detail.ejs)의 경우 아래처럼 'detail.ejs' 이렇게만 작성해도 된다.
+      // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
+      // 1. 아래처럼 ejs 파일('detail.ejs')로 데이터 전송({ result : result })
+      // 2. ejs 파일('detail.ejs') 안에서 ejs 문법 <%= result %> 사용 
+      응답.render('detail.ejs', { result : result })
+    }
+    
+    // TODO : 아래 주석친 테스트 코드 필요시 참고 (2024.12.24 jbh)    
+    // console.log(result)   // 변수 result에 저장된 값이 null(null은 텅 비었다는걸 나타내는 자료형 의미)인지 아닌지 체크할 때 사용 
     // let result = await db.collection('post').find().toArray()  // MongoDB 컬렉션 'post'에 있는 모든 document 가져오기
-
-    // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
-    // 기본 경로 views 폴더 -> ejs 파일(detail.ejs)의 경우 아래처럼 'detail.ejs' 이렇게만 작성해도 된다.
-    // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
-    // 1. 아래처럼 ejs 파일('detail.ejs')로 데이터 전송({ 글목록 : result })
-    // 2. ejs 파일('detail.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
-    응답.render('detail.ejs', { 글목록 : result })
 
     // MongoDB 컬렉션 'post'에 있는 모든 document들 중 데이터가 "{a : 1}"인 특정 document 가져오기(출력하기)
     // 단, 데이터가 "{a : 1}" 중복된 document들이 존재할 경우 그 중에 맨 위에 있는(가장 먼저 저장된 document) document 한개만 가져오기(출력하기)
@@ -424,13 +430,15 @@ app.get('/detail/:id', async (요청, 응답) => {
     // let result = await db.collection('post').findOne({_id : new ObjectId('64bfde3b02d2932a4c06ffba')}) 
 
     // 응답.send('detail.ejs')
-    
   } catch(e) {
     console.log(e)   // 에러 메시지 출력
     // 응답.send('DB에러남')
-    응답.status(500).send('서버에러남')  // status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻
+    응답.status(500).send('서버에러남')  // 사용자가 확인할 수 있도록 오류 상태코드(500 - 웹브라우저 console 창에 출력), 메시지 '서버에러남' 전송 - status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻 (예) status(5XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    응답.status(404).send('이상한거 넣지마라')  // 사용자가 확인할 수 있도록 오류 상태코드(404 - 웹브라우저 console 창에 출력), 메시지 '이상한거 넣지마라' 전송
+    // 응답.status(404).send('이상한 url 입력함')
   }
 })
+
 
 // 서버기능 (Rest API) - 글작성 테스트 페이지(test.ejs) 화면에 출력 
 app.get('/test', (요청, 응답)=>{
