@@ -439,6 +439,77 @@ app.get('/detail/:id', async (요청, 응답) => {
   }
 })
 
+/// <summary>
+/// 서버기능 (Rest API) - 글수정 웹페이지(edit.ejs) 웹브라우저 화면 출력 
+/// </summary>
+app.get('/edit/:id', async (요청, 응답) => {
+  try {
+    console.log(요청.params)
+    console.log(요청.params.id)   // 사용자가 URL 파라미터에 입력한 id 값(데이터) object 자료형으로 출력  
+
+    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져오기(출력하기)
+    let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.id)})
+
+    if(result == null) {
+      응답.status(400).send('그런 글 없음')   // 사용자가 확인할 수 있도록 오류 상태코드(400 - 웹브라우저 console 창에 출력), 메시지 '그런 글 없음' 전송 - status(400)은 사용자 잘못으로 인한 에러라는 뜻 (예) status(404), status(4XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    } else {
+      // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
+      // 기본 경로 views 폴더 -> ejs 파일(edit.ejs)의 경우 아래처럼 'edit.ejs' 이렇게만 작성해도 된다.
+      // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
+      // 1. 아래처럼 ejs 파일('edit.ejs')로 데이터 전송({ result : result })
+      // 2. ejs 파일('edit.ejs') 안에서 ejs 문법 <%= result %> 사용 
+      응답.render('edit.ejs', { result : result })
+    }
+
+    
+  } catch(e) {
+    console.log(e)   // 에러 메시지 출력
+    // 응답.send('DB에러남')
+    응답.status(500).send('서버에러남')  // 사용자가 확인할 수 있도록 오류 상태코드(500 - 웹브라우저 console 창에 출력), 메시지 '서버에러남' 전송 - status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻 (예) status(5XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    응답.status(404).send('이상한거 넣지마라')  // 사용자가 확인할 수 있도록 오류 상태코드(404 - 웹브라우저 console 창에 출력), 메시지 '이상한거 넣지마라' 전송
+    // 응답.status(404).send('이상한 url 입력함')
+  }
+})
+
+
+// 서버기능 (Rest API) - 글수정 웹페이지(edit.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+// 글 수정기능 명세서
+// 1. 글목록 페이지(list.ejs)에서 글마다 있는 수정버튼 누르면 글수정 페이지(edit.ejs)로 이동
+// 2. 글수정 페이지(edit.ejs)엔 글의 제목과 내용이 이미 폼에 채워져있어야함 (<form> 태그 사용 및 POST 요청 기능 구현)
+// 3. 버튼 수정누르면 그걸로 기존에 있던 document를 수정해줌 (이상 없으면 수정된 사항 MongoDB에 저장)
+/// <summary>
+/// 서버기능 (Rest API) - 글수정 웹페이지(edit.ejs) 웹브라우저 화면 출력 
+/// </summary>
+app.post('/update/:id', async (요청, 응답) => {
+  try {
+
+    // 제목(title) 유효성 검사 
+    if('' === 요청.body.title) {
+      응답.send('제목입력안했는데?')   // 제목(title)이 공백('')일 시 웹브라우저 화면으로 메시지 '제목입력안했는데?' 보내기
+    } else {
+      console.log(요청.body)
+
+      // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져와서 
+      // 제목(요청.body.title), 내용(요청.body.content)을 새로 입력한 값으로 수정해서 MongoDB 컬렉션 'post'에 속한 특정 document에 수정해서 저장하기 
+      await db.collection('post').updateOne({ _id : new ObjectId(요청.params.id) }, { $set : { title : 요청.body.title, content : 요청.body.content }})
+
+      // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 웹브라우저 화면으로 메시지 '수정완료' 보내기 
+      // 응답.send('수정완료')  
+      // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
+      응답.redirect('/list')
+    }
+
+    
+      
+  } catch(e) {
+    console.log(e)   // 에러 메시지 출력
+    // 응답.send('DB에러남')
+    응답.status(500).send('서버에러남')  // 사용자가 확인할 수 있도록 오류 상태코드(500 - 웹브라우저 console 창에 출력), 메시지 '서버에러남' 전송 - status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻 (예) status(5XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    // 응답.status(404).send('이상한거 넣지마라')  // 사용자가 확인할 수 있도록 오류 상태코드(404 - 웹브라우저 console 창에 출력), 메시지 '이상한거 넣지마라' 전송
+    // 응답.status(404).send('이상한 url 입력함')
+  }
+})
+
 
 // 서버기능 (Rest API) - 글작성 테스트 페이지(test.ejs) 화면에 출력 
 app.get('/test', (요청, 응답)=>{
