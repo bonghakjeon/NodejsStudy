@@ -28,7 +28,9 @@
   <form class="form-box" action="/update/<%= result._id %>" method="POST">
     <h4>글쓰기</h4>
     <!--  아래 <input> 태그들은 <form> 태그 안에 구현해야 한다.  -->
-    <!--  아래처럼 <input> 태그안에 name 속성 및 값을 할당해서 사용해야 <input> 태그에 입력한 값들을 서버로 전송 가능  -->
+    <!--  아래처럼 <input> 태그안에 name 속성에 값을 할당해서 사용해야 <input> 태그에 입력한 값(value)들을 서버로 전송 가능  -->
+    <!--  <input> 태그에 입력한 기존 값(value)들을 수정하려면 기존 값(value)들이 화면상에 그대로 출력되야 하므로 아래처럼 value 속성에 값 할당 해야함.  -->
+    <!--  value="<%= result.title %>" / value="<%= result.content %>"-->
     <input name="title" value="<%= result.title %>">
     <input name="content" value="<%= result.content %>">
     <button type="submit">수정</button>

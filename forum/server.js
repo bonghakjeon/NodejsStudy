@@ -30,6 +30,7 @@
 // 13강 - 글 작성기능 만들기 2 (insertOne, 예외 처리)
 // 14강 - 상세페이지 만들기 1 (URL parameter)
 // 15강 - 상세페이지 만들기 2 (링크 만들기)
+// 16강 - 수정기능 만들기 1
 
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
@@ -444,11 +445,12 @@ app.get('/detail/:id', async (요청, 응답) => {
 /// </summary>
 app.get('/edit/:id', async (요청, 응답) => {
   try {
-    console.log(요청.params)
-    console.log(요청.params.id)   // 사용자가 URL 파라미터에 입력한 id 값(데이터) object 자료형으로 출력  
+    // console.log(요청.params)
+    // console.log(요청.params.id)   // 사용자가 URL 파라미터에 입력한 id 값(데이터) object 자료형으로 출력  
 
-    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져오기(출력하기)
+    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식인 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 특정 document 1개 가져오기(출력하기)
     let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.id)})
+    console.log(result)
 
     if(result == null) {
       응답.status(400).send('그런 글 없음')   // 사용자가 확인할 수 있도록 오류 상태코드(400 - 웹브라우저 console 창에 출력), 메시지 '그런 글 없음' 전송 - status(400)은 사용자 잘못으로 인한 에러라는 뜻 (예) status(404), status(4XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
@@ -460,8 +462,6 @@ app.get('/edit/:id', async (요청, 응답) => {
       // 2. ejs 파일('edit.ejs') 안에서 ejs 문법 <%= result %> 사용 
       응답.render('edit.ejs', { result : result })
     }
-
-    
   } catch(e) {
     console.log(e)   // 에러 메시지 출력
     // 응답.send('DB에러남')
@@ -477,6 +477,9 @@ app.get('/edit/:id', async (요청, 응답) => {
 // 1. 글목록 페이지(list.ejs)에서 글마다 있는 수정버튼 누르면 글수정 페이지(edit.ejs)로 이동
 // 2. 글수정 페이지(edit.ejs)엔 글의 제목과 내용이 이미 폼에 채워져있어야함 (<form> 태그 사용 및 POST 요청 기능 구현)
 // 3. 버튼 수정누르면 그걸로 기존에 있던 document를 수정해줌 (이상 없으면 수정된 사항 MongoDB에 저장)
+// 기능 구현 팁(Tip) 
+// 1) 서버에서 특정 document를 찾을 수 없다면 사용자에게 보내라고 요청 
+// 2) 서버에서 특정 document를 찾을 수 없다면 MongoDB에서 꺼내보기 
 /// <summary>
 /// 서버기능 (Rest API) - 글수정 웹페이지(edit.ejs) 웹브라우저 화면 출력 
 /// </summary>
@@ -491,6 +494,8 @@ app.post('/update/:id', async (요청, 응답) => {
 
       // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져와서 
       // 제목(요청.body.title), 내용(요청.body.content)을 새로 입력한 값으로 수정해서 MongoDB 컬렉션 'post'에 속한 특정 document에 수정해서 저장하기 
+      // (예시1) await db.collection('post').updateOne( {수정할document정보}, {$set: {덮어쓸내용}}) -> 수정할document정보 히니 찾아서 덮어쓸내용으로 수정하기 
+      // (예시2) await db.collection('post').updateOne( { a : 1 }, {$set: { a : 2 }}) -> a : 1을 가진 document를 하나 찾아서 a 항목을 2로 수정하기 
       await db.collection('post').updateOne({ _id : new ObjectId(요청.params.id) }, { $set : { title : 요청.body.title, content : 요청.body.content }})
 
       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 웹브라우저 화면으로 메시지 '수정완료' 보내기 
@@ -498,9 +503,6 @@ app.post('/update/:id', async (요청, 응답) => {
       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
       응답.redirect('/list')
     }
-
-    
-      
   } catch(e) {
     console.log(e)   // 에러 메시지 출력
     // 응답.send('DB에러남')
