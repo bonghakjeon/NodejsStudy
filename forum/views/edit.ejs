@@ -23,14 +23,25 @@
 <body>
   <%- include('nav.ejs') %>
 
-  <!--  <form> 태그 사용하여 서버 URL 주소 "/add" POST 요청 하는 방법  -->
-  <!--  글수정 웹페이지(edit.ejs)에서 작성 글을 서버로 전송(http - 'POST')하기 위하여 아래처럼 action 속성에 URL 주소 "/add" 할당 및 method 속성에 'POST' 방식으로 요청  -->
-  <form class="form-box" action="/update/<%= result._id %>" method="POST">
-    <h4>글쓰기</h4>
+  <!--  <form> 태그 사용하여 서버 URL 주소 "/edit" POST 요청 하는 방법  -->
+  <!--  글수정 페이지(edit.ejs)에서 작성 글을 서버로 전송(http - 'POST')하기 위하여 아래처럼 action 속성에 URL 주소 "/edit" 할당 및 method 속성에 'POST' 방식으로 요청  -->
+  <!--  <form> 태그 주의사항  --> 
+  <!--  1) 속성 method에는 "GET", "POST"만 할당(사용) 가능하고 그외 "PUT", "DELETE"는 할당(사용) 불가하다.  -->
+  <!--  2) 데이터를 서버로 전송하고자 할때는 속성 method에는 "POST"로 할당(사용)해야 한다.  -->
+  <!--  3) 만약 굳이 속성 method에 "PUT"을 사용하고 싶다면 ajax 사용하거나 또는 외부 라이브러리를 설치해서 사용해야 한다. -->
+  <form class="form-box" action="/edit" method="POST">
+    <h4>수정하기</h4>
     <!--  아래 <input> 태그들은 <form> 태그 안에 구현해야 한다.  -->
     <!--  아래처럼 <input> 태그안에 name 속성에 값을 할당해서 사용해야 <input> 태그에 입력한 값(value)들을 서버로 전송 가능  -->
     <!--  <input> 태그에 입력한 기존 값(value)들을 수정하려면 기존 값(value)들이 화면상에 그대로 출력되야 하므로 아래처럼 value 속성에 값 할당 해야함.  -->
     <!--  value="<%= result.title %>" / value="<%= result.content %>"-->
+    <!--  <input name="id" value="<%= result._id %>">  -->
+  
+    <!--  MongoDB와 연동된 서버에서 보내주는 데이터 result를 아래 함수 JSON.stringify 사용해서 화면상에 데이터 출력하기  -->
+    <%= JSON.stringify(result) %>
+
+    <!--  사용자가 MongoDB id 값(result._id)을 마음대로 수정하지 못하도록 화면에서 숨김처리(style="display : none") 구현 -->
+    <input name="id" value="<%= result._id %>" style="display : none"> 
     <input name="title" value="<%= result.title %>">
     <input name="content" value="<%= result.content %>">
     <button type="submit">수정</button>
@@ -39,7 +50,17 @@
     <!--  <input type="email">  -->
     <!--  <input type="password">  -->
     <!--  <input type="text">  -->
-  </form> 
+  </form>
+
+  <!--  <form> 태그 사용하여 서버 URL 주소 "/update" POST 요청 하는 방법  -->
+  <!--  글수정 페이지(edit.ejs)에서 작성 글을 서버로 전송(http - 'POST')하기 위하여 아래처럼 action 속성에 URL 주소 "/update" 할당 및 method 속성에 'POST' 방식으로 요청  -->
+  <!-- <form class="form-box" action="/update/<%= result._id %>" method="POST">
+    <h4>수정하기</h4>
+
+    <input name="title" value="<%= result.title %>">
+    <input name="content" value="<%= result.content %>">
+    <button type="submit">수정</button>
+  </form>  -->
 
   <!--  주의사항 - 아래 <script> 태그는 <body> 태그 가장 아래에 위치 해야함.  -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 

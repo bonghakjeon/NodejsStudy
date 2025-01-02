@@ -31,6 +31,7 @@
 // 14강 - 상세페이지 만들기 1 (URL parameter)
 // 15강 - 상세페이지 만들기 2 (링크 만들기)
 // 16강 - 수정기능 만들기 1
+// 17강 - 수정기능 만들기 2 (저번시간 숙제)
 
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
@@ -472,7 +473,7 @@ app.get('/edit/:id', async (요청, 응답) => {
 })
 
 
-// 서버기능 (Rest API) - 글수정 웹페이지(edit.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+
 // 글 수정기능 명세서
 // 1. 글목록 페이지(list.ejs)에서 글마다 있는 수정버튼 누르면 글수정 페이지(edit.ejs)로 이동
 // 2. 글수정 페이지(edit.ejs)엔 글의 제목과 내용이 이미 폼에 채워져있어야함 (<form> 태그 사용 및 POST 요청 기능 구현)
@@ -481,10 +482,19 @@ app.get('/edit/:id', async (요청, 응답) => {
 // 1) 서버에서 특정 document를 찾을 수 없다면 사용자에게 보내라고 요청 
 // 2) 서버에서 특정 document를 찾을 수 없다면 MongoDB에서 꺼내보기 
 /// <summary>
-/// 서버기능 (Rest API) - 글수정 웹페이지(edit.ejs) 웹브라우저 화면 출력 
+/// 서버기능 (Rest API) - 글수정 페이지(edit.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
 /// </summary>
-app.post('/update/:id', async (요청, 응답) => {
+app.post('/edit', async (요청, 응답) => {
   try {
+    // 요청.body 의미? 
+    // 사용자가 글수정 페이지(edit.ejs) 안의 <input> 태그에 직접 작성한 값(value - 글, 숫자 등등...)들이 들어있는 body를 의미
+    console.log(요청.body)
+    
+    // try ~ catch 예외처리 기능 구현 예시
+    // 1. 사용자가 _id 이상하게 보내면?
+    // 2. 수정할 글 내용이 없으면? (공백 '' 또는 null)
+    // 3. 사용자가 title, content 말고 다른 내용으로 보내면?
+    // 4. 이상한 에러로 수정이 실패하면? (MongoDB 또는 웹서버상의 오류)
 
     // 제목(title) 유효성 검사 
     if('' === 요청.body.title) {
@@ -494,9 +504,14 @@ app.post('/update/:id', async (요청, 응답) => {
 
       // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져와서 
       // 제목(요청.body.title), 내용(요청.body.content)을 새로 입력한 값으로 수정해서 MongoDB 컬렉션 'post'에 속한 특정 document에 수정해서 저장하기 
-      // (예시1) await db.collection('post').updateOne( {수정할document정보}, {$set: {덮어쓸내용}}) -> 수정할document정보 히니 찾아서 덮어쓸내용으로 수정하기 
-      // (예시2) await db.collection('post').updateOne( { a : 1 }, {$set: { a : 2 }}) -> a : 1을 가진 document를 하나 찾아서 a 항목을 2로 수정하기 
-      await db.collection('post').updateOne({ _id : new ObjectId(요청.params.id) }, { $set : { title : 요청.body.title, content : 요청.body.content }})
+      // (예시1) let result = await db.collection('post').updateOne( {수정할document정보}, {$set: {덮어쓸내용}}) -> 수정할document정보 히니 찾아서 덮어쓸내용으로 수정하기 
+      // (예시2) let result = await db.collection('post').updateOne( { a : 1 }, {$set: { a : 2 }}) -> a : 1을 가진 document를 하나 찾아서 a 항목을 2로 수정하기 
+      // (예시3) let result = await db.collection('post').updateOne({ _id : new ObjectId(요청.params.id) }, { $set : { title : 요청.body.title, content : 요청.body.content }})
+      // (예시4) 함수 updateOne 사용해서 MondgoDB 데이터 수정한 결과 변수 result에 할당 
+      // let result = await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+      //                                                    { $set : { title : 요청.body.title, content : 요청.body.content }})
+      await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+                                            { $set : { title : 요청.body.title, content : 요청.body.content }})
 
       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 웹브라우저 화면으로 메시지 '수정완료' 보내기 
       // 응답.send('수정완료')  
@@ -511,6 +526,40 @@ app.post('/update/:id', async (요청, 응답) => {
     // 응답.status(404).send('이상한 url 입력함')
   }
 })
+
+
+// TODO : 아래 주석친 코드 필요시 참고 (2025.01.03 jbh)
+/// <summary>
+/// 서버기능 (Rest API) - 글수정 게시판(edit.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+/// </summary>
+// app.post('/update/:id', async (요청, 응답) => {
+//   try {
+
+//     // 제목(title) 유효성 검사 
+//     if('' === 요청.body.title) {
+//       응답.send('제목입력안했는데?')   // 제목(title)이 공백('')일 시 웹브라우저 화면으로 메시지 '제목입력안했는데?' 보내기
+//     } else {
+//       console.log(요청.body)
+
+//       // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져와서 
+//       // 제목(요청.body.title), 내용(요청.body.content)을 새로 입력한 값으로 수정해서 MongoDB 컬렉션 'post'에 속한 특정 document에 수정해서 저장하기 
+//       // (예시1) await db.collection('post').updateOne( {수정할document정보}, {$set: {덮어쓸내용}}) -> 수정할document정보 히니 찾아서 덮어쓸내용으로 수정하기 
+//       // (예시2) await db.collection('post').updateOne( { a : 1 }, {$set: { a : 2 }}) -> a : 1을 가진 document를 하나 찾아서 a 항목을 2로 수정하기 
+//       await db.collection('post').updateOne({ _id : new ObjectId(요청.params.id) }, { $set : { title : 요청.body.title, content : 요청.body.content }})
+
+//       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 웹브라우저 화면으로 메시지 '수정완료' 보내기 
+//       // 응답.send('수정완료')  
+//       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
+//       응답.redirect('/list')
+//     }
+//   } catch(e) {
+//     console.log(e)   // 에러 메시지 출력
+//     // 응답.send('DB에러남')
+//     응답.status(500).send('서버에러남')  // 사용자가 확인할 수 있도록 오류 상태코드(500 - 웹브라우저 console 창에 출력), 메시지 '서버에러남' 전송 - status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻 (예) status(5XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+//     // 응답.status(404).send('이상한거 넣지마라')  // 사용자가 확인할 수 있도록 오류 상태코드(404 - 웹브라우저 console 창에 출력), 메시지 '이상한거 넣지마라' 전송
+//     // 응답.status(404).send('이상한 url 입력함')
+//   }
+// })
 
 
 // 서버기능 (Rest API) - 글작성 테스트 페이지(test.ejs) 화면에 출력 

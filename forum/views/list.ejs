@@ -51,7 +51,8 @@
              style="text-decoration : none">
             <%= 글목록[i].title %>
           </a>
-          <!--  글수정 게시판 이동 기능  -->
+          <!-- <%= 글목록[i]._id %> -->
+          <!--  글수정 페이지(edit.ejs) 이동 기능  -->
           <a href="/edit/<%= 글목록[i]._id %>">✏️</a>
         </h4>
         <p><%= 글목록[i].content %></p>
