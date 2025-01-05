@@ -23,6 +23,17 @@
 <body>
   <%- include('nav.ejs') %>
 
+  <!--  <form> 태그 사용하여 서버 URL 주소 "/edit" PUT 요청 하는 방법  -->
+  <!--  글수정 페이지(edit.ejs)에서 작성 글을 서버로 전송(http - 'PUT')하기 위하여 <form>태그 action 속성에 URL 주소 "/edit?_method=PUT" 할당 및 method 속성에 'POST' 방식으로 요청  -->
+  <!--  <form> 태그 주의사항  --> 
+  <!--  1) 만약 굳이 속성 method에 "PUT"을 사용하고 싶다면 ajax 사용하거나 또는 외부 라이브러리 method-override를 설치해서 사용해야 한다.  -->
+  <!--  2) 서버 파일(server.js) 상단에 아래와 같은 코드 추가 필수  -->
+  <!--     const methodOverride = require('method-override')    -->
+  <!--     app.use(methodOverride('_method'))  -->
+  <!--  3) 아래처럼 <form> 태그 action 속성에 URL 주소 "/edit?_method=PUT"를 코드로 작성하여 해당 <form> 태그에 속한 데이터 전송시 POST요청이 아니라 PUT 요청으로 덮어쓰기가 된다. -->
+  <!--  4) 다만, <form> 태그 method 속성은 method="POST" 로 그대로 써야 한다. (다른 값으로 작성하면 오류 발생)  -->
+  <!--  (예) <form action="/edit?_method=PUT" method="POST">  -->
+  
   <!--  <form> 태그 사용하여 서버 URL 주소 "/edit" POST 요청 하는 방법  -->
   <!--  글수정 페이지(edit.ejs)에서 작성 글을 서버로 전송(http - 'POST')하기 위하여 아래처럼 action 속성에 URL 주소 "/edit" 할당 및 method 속성에 'POST' 방식으로 요청  -->
   <!--  <form> 태그 주의사항  --> 

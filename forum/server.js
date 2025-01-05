@@ -32,7 +32,7 @@
 // 15강 - 상세페이지 만들기 2 (링크 만들기)
 // 16강 - 수정기능 만들기 1
 // 17강 - 수정기능 만들기 2 (저번시간 숙제)
-
+// 18강 - 수정기능 만들기 3 (method-override, MongoDB 수정문법 추가)
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
 // 클라이언트사이드 렌더링이란? 서버에서 빈 html 파일과 데이터만 클라이언트로 보내고, 웹브라우저 안에서 서버로 부터 받은 html 파일과 데이터 가지고 동적으로 렌더링 해주는 기술이다. (예) React
@@ -92,33 +92,39 @@
 const express = require('express') // express 라이브러리 사용
 const app = express() // express 라이브러리 사용
 
+// 4. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
+// Node.js 서버와 MongoDB 연동 해야 하는 이유
+// 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
+// 5. 아래 주석친 코드 중 new ObjectId('64bfde3b02d2932a4c06ffba') 사용하기 위해서 아래 const { ObjectId } = require('mongodb') 코드 구현 
+// let result = await db.collection('post').findOne({_id : new ObjectId('64bfde3b02d2932a4c06ffba')}) 
+const { MongoClient, ObjectId } = require('mongodb')
+// const { ObjectId } = require('mongodb') 
 
-// 4. 웹서버에 public 폴더 등록 
+// 6. 웹페이지(확장자 .ejs - (예) edit.ejs) 파일에 구현한 <form> 태그에 속한 method 속성에 "PUT", "DELETE" 요청하기 위한 방법
+// 1) 터미널에 명령어 "npm install method-override" 입력 및 엔터 -> 라이브러리 method-override 설치 
+// 2) 1)번에서 설치한 method-override 라이브러리 사용해서 아래처럼 코드 작성 
+const methodOverride = require('method-override')
+app.use(methodOverride('_method')) 
+
+
+// 7. 웹서버에 public 폴더 등록 
 // 용도 - public 폴더 안에 있는 static 파일들(.css / 이미지 / .js)을 html 파일 (예) index.html, about.html 등등... 에서 가져다 쓰기 위한 용도 
 // 참고 URL - https://coding-yesung.tistory.com/175
 app.use(express.static(__dirname + '/public'));
 
-// 5. ejs 템플릿 엔진 사용하기 
+// 8. ejs 템플릿 엔진 사용하기 
 // 웹서버로 부터 받은 데이터를 html 파일에 넣기 위해 ejs 템플릿 엔진 사용 
 // 웹서버로 부터 받은 데이터를 html 파일에 넣으려면 ejs 파일(확장자 .ejs)을 폴더 views 안에서 만들기 
 app.set('view engine', 'ejs') 
 
-// 6. 사용자가 서버로 보낸 정보(데이터) 검사 및 출력 설정 
+// 9. 사용자가 서버로 보낸 정보(데이터) 검사 및 출력 설정 
 // 사용자가 <input> 태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 
 // 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있도록 하기 위해 아래처럼 설정할 수 있는 코드 2줄을 추가한다.
 app.use(express.json())
 app.use(express.urlencoded({extended:true})) 
 
-// 7. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
-// Node.js 서버와 MongoDB 연동 해야 하는 이유
-// 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
-// 8. 아래 주석친 코드 중 new ObjectId('64bfde3b02d2932a4c06ffba') 사용하기 위해서 아래 const { ObjectId } = require('mongodb') 코드 구현 
-// let result = await db.collection('post').findOne({_id : new ObjectId('64bfde3b02d2932a4c06ffba')}) 
-const { MongoClient, ObjectId } = require('mongodb')
-// const { ObjectId } = require('mongodb') 
 
-
-let db
+let db;
 // mongodb 사이트에 회원 가입한 계정에 있는 DB접속URL, DB접속아이디, DB접속비번
 // 참고 URL - https://www.mongodb.com/products/platform/atlas-database
 // DB 접속 URL - (예시) mongodb+srv://DB접속아이디:DB접속비번@cluster0.jea.mongodb.net/?retryWrites=true&w=majority
@@ -482,7 +488,7 @@ app.get('/edit/:id', async (요청, 응답) => {
 // 1) 서버에서 특정 document를 찾을 수 없다면 사용자에게 보내라고 요청 
 // 2) 서버에서 특정 document를 찾을 수 없다면 MongoDB에서 꺼내보기 
 /// <summary>
-/// 서버기능 (Rest API) - 글수정 페이지(edit.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+/// 서버기능 (Rest API - POST) - 글수정 페이지(edit.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
 /// </summary>
 app.post('/edit', async (요청, 응답) => {
   try {
@@ -502,6 +508,7 @@ app.post('/edit', async (요청, 응답) => {
     } else {
       console.log(요청.body)
 
+
       // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져와서 
       // 제목(요청.body.title), 내용(요청.body.content)을 새로 입력한 값으로 수정해서 MongoDB 컬렉션 'post'에 속한 특정 document에 수정해서 저장하기 
       // (예시1) let result = await db.collection('post').updateOne( {수정할document정보}, {$set: {덮어쓸내용}}) -> 수정할document정보 히니 찾아서 덮어쓸내용으로 수정하기 
@@ -517,6 +524,126 @@ app.post('/edit', async (요청, 응답) => {
       // 응답.send('수정완료')  
       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
       응답.redirect('/list')
+
+      // *** MongoDB 함수 updateOne 추가 문법 *** 
+      // 1) $set : 특정 document -> 특정 항목(필드)에 속한 기존 값을 새로운 값으로 덮어쓰기(변경) 처리
+      // (예) MongoDB 컬렉션 'post'에 속한 특정 document에 속한 항목(필드) "like"에 매핑되는 값을 1로 덮어쓰기(변경) 처리
+      // await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+      //                                       { $set : { title : 요청.body.title, content : 요청.body.content, like : 1 }})
+      // 2) $inc : (increase 약자 의미) 특정 document -> 특정 항목(필드)에 속한 기존 값(숫자만 해당)을 증가/감소 처리
+      // (예 1) MongoDB 컬렉션 'post'에 속한 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)을 +1 증가 처리
+      // await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+      //                                       { $set : { title : 요청.body.title, content : 요청.body.content }},
+      //                                       { $inc : { like : 1 } })
+      // (예 2) MongoDB 컬렉션 'post'에 속한 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)을 -1 감소 처리
+      // await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+      //                                       { $set : { title : 요청.body.title, content : 요청.body.content }},
+      //                                       { $inc : { like : -1 } })
+      // 3) $mul : 특정 document -> 특정 항목(필드)에 속한 기존 값(숫자만 해당)과 새로운 값을 곱셈 처리
+      // (예) MongoDB 컬렉션 'post'에 속한 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)을 X2 곱셈 처리
+      // await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+      //                                       { $set : { title : 요청.body.title, content : 요청.body.content }},
+      //                                       { $mul : { like : 2 } })
+      // 4) $unset : 특정 document -> 특정 항목(필드) 삭제 처리 
+      // (예) MongoDB 컬렉션 'post'에 속한 특정 document에 속한 항목(필드) "like" 삭제 처리
+      // await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+      //                                       { $set : { title : 요청.body.title, content : 요청.body.content }},
+      //                                       { $unset : { like }})
+
+      // *** MongoDB 함수 updateOne 추가 문법 예제 *** 
+      // $set : 특정 항목(필드) id 값이 1인 특정 document -> 특정 항목(필드) "like"에 속한 기존 값(10) -> 새로운 값(1) 덮어쓰기(변경) 처리
+      // await db.collection('post').updateOne({ _id : 1 }, 
+      //                                       { $set : { like : 1 }})
+
+      // $inc : (increase 약자 의미) 특정 항목(필드) id 값이 1인 특정 document -> 특정 항목(필드) "like"에 속한 기존 값(숫자만 해당)을 +1 증가 처리
+      // await db.collection('post').updateOne({ _id : 1 }, 
+      //                                       { $inc : { like : 1 }})
+
+      // $inc : (increase 약자 의미) 특정 항목(필드) id 값이 1인 특정 document -> 특정 항목(필드) "like"에 속한 기존 값(숫자만 해당)을 -2 감소 처리
+      // await db.collection('post').updateOne({ _id : 1 }, 
+      //                                       { $inc : { like : -2 }})
+
+      // 3) $mul : 특정 항목(필드) id 값이 1인 특정 document -> 특정 항목(필드) "like"에 속한 기존 값(숫자만 해당)과 새로운 값(2)을 곱셈 처리
+      // await db.collection('post').updateOne({ _id : 1 }, 
+      //                                       { $mul : { like : 2}})
+
+      // 4) $unset : 특정 항목(필드) id 값이 1인 특정 document -> 특정 항목(필드) "like" 삭제 처리 
+      // await db.collection('post').updateOne({ _id : 1 }, 
+      //                                       { $unset : { like }})
+
+      // *** MongoDB 함수 updateMany 추가 문법 *** 
+      // 1) 동시에 특정 조건이 일치하는 여러개의 document에 속한 데이터 수정
+      // (예) MongoDB 컬렉션 'post' -> 여러개의 document에 속한 항목(필드) "title" 값이 '멍청아'로 되어있는 모든 document를 찾아서 항목(필드) "title"에 매핑되는 값을 '착한친구야'로 덮어쓰기 처리
+      // await db.collection('post').updateMany({ title : '멍청아' },
+      //                                        { $set: { title : '착한친구야' } })
+      // 2) 동시에 특정 조건을 만족하는 여러개의 document에 속한 데이터 수정
+      // $gt - greater than의 약자(초과 의미)
+      // (예1) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 5보다 큰(>) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 100으로 일괄 수정
+      // await db.collection('post').updateMany({ like : { $gt: 5 } },
+      //                                        { $set: { like : 100 } }) 
+
+      // $gte - greater than + equal의 약자(이상 의미)
+      // (예2) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 5보다 크거나 같은(>=) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 100으로 일괄 수정
+      // await db.collection('post').updateMany({ like : { $gte : 5 } },
+      //                                        { $set: { like : 100 } }) 
+
+      // $lt - lesser than의 약자(미만 의미)
+      // (예3) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 5보다 작은(<) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 100으로 일괄 수정 
+      // await db.collection('post').updateMany({ like : { $lt : 5 } },
+      //                                        { $set: { like : 100 } }) 
+
+      // $lte - lesser than + equal의 약자(이하 의미)
+      // (예4) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 5보다 작거나 같은(<=) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 100으로 일괄 수정 
+      // await db.collection('post').updateMany({ like : { $lte : 5 } },
+      //                                        { $set: { like : 100 } }) 
+
+      // $ne - not equal의 약자(특정 조건이 아닌 것만 의미)
+      // (예5) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 5가 아닌(!=) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 100으로 일괄 수정 
+      // await db.collection('post').updateMany({ like : { $ne : 5 } },
+      //                                        { $set: { like : 100 } }) 
+
+      // *** MongoDB 함수 updateMany 추가 문법 예제 *** 
+      // 1) 동시에 특정 조건이 일치하는 여러개의 document에 속한 데이터 수정
+      // (예) MongoDB 컬렉션 'post' -> 여러개의 document에 속한 항목(필드) "_id" 값이 1로 되어있는 모든 document를 찾아서 항목(필드) "like"에 매핑되는 값을 2로 덮어쓰기 처리
+      // await db.collection('post').updateMany({ _id : 1}, 
+      //                                        { $set : { like : 2 } })
+
+      // 2) 동시에 특정 조건을 만족하는 여러개의 document에 속한 데이터 수정
+      // $gt - greater than의 약자(초과 의미)
+      // (예1) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 10보다 큰(>) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 2로 일괄 수정
+      // await db.collection('post').updateMany({ like : { $gt : 10 } }, 
+      //                                        { $set : { like : 2 } })
+
+      // $gte - greater than + equal의 약자(이상 의미)
+      // (예2) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 10보다 크거나 같은(>=) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 2로 일괄 수정
+      // await db.collection('post').updateMany({ like : { $gte : 10 } },
+      //                                        { $set: { like : 2 } }) 
+
+      // $lt - lesser than의 약자(미만 의미)
+      // (예3) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 10보다 작은(<) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 100으로 일괄 수정 
+      // await db.collection('post').updateMany({ like : { $lt : 10 } },
+      //                                        { $set: { like : 2 } }) 
+
+      // $lte - lesser than + equal의 약자(이하 의미)
+      // (예4) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 10보다 작거나 같은(<=) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 100으로 일괄 수정 
+      // await db.collection('post').updateMany({ like : { $lte : 10 } },
+      //                                        { $set: { like : 2 } }) 
+
+      // $ne - not equal의 약자(특정 조건이 아닌 것만 의미)
+      // (예5) MongoDB 컬렉션 'post' -> 특정 document에 속한 항목(필드) "like"에 매핑되는 값(숫자만 해당)이 10가 아닌(!=) document만 전부 필터링한 다음 
+      //       항목(필드) "like"에 매핑되는 값(숫자만 해당)을 2로 일괄 수정 
+      // await db.collection('post').updateMany({ like : { $ne : 10 } },
+      //                                        { $set: { like : 2 } }) 
+
     }
   } catch(e) {
     console.log(e)   // 에러 메시지 출력
@@ -526,6 +653,53 @@ app.post('/edit', async (요청, 응답) => {
     // 응답.status(404).send('이상한 url 입력함')
   }
 })
+
+// TODO : 아래 주석친 코드 필요시 참고 (2025.01.03 jbh)
+/// <summary>
+/// 서버기능 (Rest API - PUT) - 글수정 페이지(edit.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에 데이터 저장 
+/// </summary>
+// app.put('/edit', async (요청, 응답) => {
+//   try {
+//     // 요청.body 의미? 
+//     // 사용자가 글수정 페이지(edit.ejs) 안의 <input> 태그에 직접 작성한 값(value - 글, 숫자 등등...)들이 들어있는 body를 의미
+//     console.log(요청.body)
+    
+//     // try ~ catch 예외처리 기능 구현 예시
+//     // 1. 사용자가 _id 이상하게 보내면?
+//     // 2. 수정할 글 내용이 없으면? (공백 '' 또는 null)
+//     // 3. 사용자가 title, content 말고 다른 내용으로 보내면?
+//     // 4. 이상한 에러로 수정이 실패하면? (MongoDB 또는 웹서버상의 오류)
+
+//     // 제목(title) 유효성 검사 
+//     if('' === 요청.body.title) {
+//       응답.send('제목입력안했는데?')   // 제목(title)이 공백('')일 시 웹브라우저 화면으로 메시지 '제목입력안했는데?' 보내기
+//     } else {
+//       console.log(요청.body)
+
+//       // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식 ( { _id : 사용자가 URL 파라미터에 입력한 id 값 } ) 인 특정 document 가져와서 
+//       // 제목(요청.body.title), 내용(요청.body.content)을 새로 입력한 값으로 수정해서 MongoDB 컬렉션 'post'에 속한 특정 document에 수정해서 저장하기 
+//       // (예시1) let result = await db.collection('post').updateOne( {수정할document정보}, {$set: {덮어쓸내용}}) -> 수정할document정보 히니 찾아서 덮어쓸내용으로 수정하기 
+//       // (예시2) let result = await db.collection('post').updateOne( { a : 1 }, {$set: { a : 2 }}) -> a : 1을 가진 document를 하나 찾아서 a 항목을 2로 수정하기 
+//       // (예시3) let result = await db.collection('post').updateOne({ _id : new ObjectId(요청.params.id) }, { $set : { title : 요청.body.title, content : 요청.body.content }})
+//       // (예시4) 함수 updateOne 사용해서 MondgoDB 데이터 수정한 결과 변수 result에 할당 
+//       // let result = await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+//       //                                                    { $set : { title : 요청.body.title, content : 요청.body.content }})
+//       await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) },
+//                                             { $set : { title : 요청.body.title, content : 요청.body.content }})
+
+//       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 웹브라우저 화면으로 메시지 '수정완료' 보내기 
+//       // 응답.send('수정완료')  
+//       // MongoDB 컬렉션 'post'에 데이터 수정 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
+//       응답.redirect('/list')
+//     }
+//   } catch(e) {
+//     console.log(e)   // 에러 메시지 출력
+//     // 응답.send('DB에러남')
+//     응답.status(500).send('서버에러남')  // 사용자가 확인할 수 있도록 오류 상태코드(500 - 웹브라우저 console 창에 출력), 메시지 '서버에러남' 전송 - status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻 (예) status(5XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+//     // 응답.status(404).send('이상한거 넣지마라')  // 사용자가 확인할 수 있도록 오류 상태코드(404 - 웹브라우저 console 창에 출력), 메시지 '이상한거 넣지마라' 전송
+//     // 응답.status(404).send('이상한 url 입력함')
+//   }
+// })
 
 
 // TODO : 아래 주석친 코드 필요시 참고 (2025.01.03 jbh)
