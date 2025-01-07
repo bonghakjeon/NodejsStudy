@@ -33,6 +33,7 @@
 // 16강 - 수정기능 만들기 1
 // 17강 - 수정기능 만들기 2 (저번시간 숙제)
 // 18강 - 수정기능 만들기 3 (method-override, MongoDB 수정문법 추가)
+// 19강 - 삭제기능 만들기 1 (AJAX, query string)
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
 // 클라이언트사이드 렌더링이란? 서버에서 빈 html 파일과 데이터만 클라이언트로 보내고, 웹브라우저 안에서 서버로 부터 받은 html 파일과 데이터 가지고 동적으로 렌더링 해주는 기술이다. (예) React
@@ -664,13 +665,18 @@ app.post('/edit', async (요청, 응답) => {
 /// <summary>
 /// 서버기능 (Rest API - DELETE) - 글목록 페이지(list.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에서 데이터 삭제 
 /// </summary>
-app.delete('/delete' , async(요청, 응답) => {
+app.delete('/delete', async(요청, 응답) => {
 
   try {
     console.log('테스트')
     // 요청.body 의미? 
     // 사용자가 글목록 페이지(list.ejs) 에서 삭제하고자 하는 글의 정보(글목록 id 값)를 담은 body를 의미
     console.log(요청.query)
+
+    // TODO : 해당 "/delete" URL 주소로 Http - DELETE 요청시 오류 메시지 아래와 같은 오류 메시지가 출력되면 ObjectId 값이 유효성 검사하는 로직 추후 구현 필요 (2025.01.08 jbh)
+    // "BSONError: Argument passed in must be a string of 12 bytes or a string of 24 hex characters or an integer" 
+    // 참고 URL - https://www.mongodb.com/community/forums/t/bsontypeerror-argument-passed-in-must-be-a-string-of-12-bytes-or-a-string-of-24-hex-characters-or-an-integer/188466/2
+    // 참고 2 URL - https://codingapple.com/forums/topic/bsonerror-argument-passed-in-must-be-a-string-of-12-bytes-or-a-string-of-24-hex/
 
     // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식인 ( { _id : query string 입력한 id 값 } ) 특정 document 1개 삭제하기
     // 참고 URL - https://www.mongodb.com/ko-kr/docs/manual/tutorial/remove-documents/
