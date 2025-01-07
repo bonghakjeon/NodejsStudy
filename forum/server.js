@@ -401,6 +401,13 @@ app.post('/add', async (요청, 응답)=>{
   // });
 }) 
 
+// *** URL 파라미터 / query string 장점 *** 
+// 둘 다 아무 API로 GET, POST, PUT, DELETE 요청할 때 전부 쓸 수 있다는게 장점이다.
+
+// *** URL 파라미터 / query string 단점 *** 
+// 단점은 URL에 정보가 노출된다는 겁니다. 
+// 하여 URL 파라미터 / query string의 경우 짧고 안중요한 데이터 전송하는데 쓰는게 좋다. 
+
 // TODO : URL 파라미터 문법 사용하여 URL 입력란에 ":~~~~" 이런 식으로 URL 주소 추가 구현 (2024.12.19 jbh)
 //        사용자가 URL 주소 "/detail/아무문자"로 접속하면 아래 Rest API 기능 app.get('/detail/:aaaa', (요청, 응답)=>{ ... })  실행  
 // 참고 URL - https://dawonny.tistory.com/273
@@ -644,6 +651,37 @@ app.post('/edit', async (요청, 응답) => {
       // await db.collection('post').updateMany({ like : { $ne : 10 } },
       //                                        { $set: { like : 2 } }) 
 
+    }
+  } catch(e) {
+    console.log(e)   // 에러 메시지 출력
+    // 응답.send('DB에러남')
+    응답.status(500).send('서버에러남')  // 사용자가 확인할 수 있도록 오류 상태코드(500 - 웹브라우저 console 창에 출력), 메시지 '서버에러남' 전송 - status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻 (예) status(5XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    // 응답.status(404).send('이상한거 넣지마라')  // 사용자가 확인할 수 있도록 오류 상태코드(404 - 웹브라우저 console 창에 출력), 메시지 '이상한거 넣지마라' 전송
+    // 응답.status(404).send('이상한 url 입력함')
+  }
+})
+
+/// <summary>
+/// 서버기능 (Rest API - DELETE) - 글목록 페이지(list.ejs)에서 사용자가 작성한 글을 서버를 통해 MongoDB의 특정 컬렉션 'post'에서 데이터 삭제 
+/// </summary>
+app.delete('/delete' , async(요청, 응답) => {
+
+  try {
+    console.log('테스트')
+    // 요청.body 의미? 
+    // 사용자가 글목록 페이지(list.ejs) 에서 삭제하고자 하는 글의 정보(글목록 id 값)를 담은 body를 의미
+    console.log(요청.query)
+
+    // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식인 ( { _id : query string 입력한 id 값 } ) 특정 document 1개 삭제하기
+    // 참고 URL - https://www.mongodb.com/ko-kr/docs/manual/tutorial/remove-documents/
+    let result = await db.collection('post').deleteOne({ _id : new ObjectId(요청.query.deleteid) });
+    console.log(result)
+
+    if(result == null) {
+      응답.status(400).send('그런 글 없음')   // 사용자가 확인할 수 있도록 오류 상태코드(400 - 웹브라우저 console 창에 출력), 메시지 '그런 글 없음' 전송 - status(400)은 사용자 잘못으로 인한 에러라는 뜻 (예) status(404), status(4XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    } else {
+      // MongoDB 컬렉션 'post'에 데이터 삭제 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
+      응답.redirect('/list')
     }
   } catch(e) {
     console.log(e)   // 에러 메시지 출력

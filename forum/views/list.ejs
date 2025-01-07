@@ -54,6 +54,13 @@
           <!-- <%= 글목록[i]._id %> -->
           <!--  글수정 페이지(edit.ejs) 이동 기능  -->
           <a href="/edit/<%= 글목록[i]._id %>">✏️</a>
+          <!--  TODO : <span> 태그 글삭제 버튼 클릭시 글삭제 이벤트 리스너로 파라미터값을 넘기기 위해 속성 data-id 사용 구현 (2024.01.07 jbh)  -->
+          <!--  참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/data-*  -->
+          <!--  참고 2 URL - https://www.dofactory.com/html/span/data  -->
+          <!--  참고 3 URL - https://b.redinfo.co.kr/17  -->
+          <!--  참고 4 URL - https://stackoverflow.com/questions/54011229/get-a-value-of-span-tag-html  -->
+          <!--  참고 5 URL - https://overcome-diary.tistory.com/36  -->
+          <span class="delete" data-id="<%= 글목록[i]._id %>">🗑️</span>
         </h4>
         <p><%= 글목록[i].content %></p>
       </div>
@@ -73,10 +80,75 @@
     <% } %>
   </div>
 
+
   <!--  주의사항 - 아래 <script> 태그는 <body> 태그 가장 아래에 위치 해야함.  -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
           integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-          crossorigin="anonymous"></script> 
+          crossorigin="anonymous"></script>  -->
+  
+  <!--  TODO : 아래 <script> 태그 속성 중 "integrity", "crossorigin" 삭제 후 해당 <script> 밑에 또 다른 <script> 태그 만들어서 AJAX - DELETE 요청 가능 하도록 구현(2025.01.07 jbh)  -->
+  <!--  참고 URL - https://mozzang.tistory.com/219  -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> 
+
+  <script>
+    /// <script> 태그안에 자바스크립트를 적을 수 있다. 그럼 페이지 로드시 자동 실행됨
+    /// querySelectorAll로 원하는 html 요소를 모두 찾을 수 있고 addEventListener(C# 이벤트 핸들러와 비슷한 기능) 쓰면 그걸 클릭시 실행할 코드를 입력할 수 있다. 
+    /// fetch() 는 AJAX 요청(GET, POST, PUT, DELETE) 날릴 때 쓰는 자바스크립트 기본 함수이다.
+    /// AJAX란?
+    /// 웹브라우저 화면 새로고침 없이도 서버에게 요청을 날리고 데이터를 주고받는 기능이다. (주소창에 URL 입력하거나 <form> 태그를 전송하는 경우에는 웹브라우저 화면이 항상 새로고침이 되기 때문)
+    /// 웹브라우저 화면 새로고침 없이 서버랑 데이터를 주고받으면 더 이쁘고 부드러운 감성가득한 사이트를 운영하고 싶을 때 사용함.
+    
+    /// <summary>
+    /// delete라는 클래스명을 가진 여러 html 요소 중 0번째를 찾아서 클릭시 함수 fetch() 실행
+    /// 참고 URL - https://overcome-diary.tistory.com/36
+    /// </summary>
+    document.querySelectorAll('.delete')[0].addEventListener('click', function(e) {
+      console.log('delete 테스트')
+      // let deleteid = document.querySelectorAll('.delete-icon')[0].getAttribute("data-id");
+      let deleteid = e.target.dataset.id;
+      fetch('/delete?deleteid=' + deleteid, {
+        method : 'DELETE',   // DELETE 요청하기 위해 method 속성에 'DELETE' 할당 
+      })
+ 
+      // *** URL 파라미터 / query string 장점 *** 
+      // 둘 다 아무 API로 GET, POST, PUT, DELETE 요청할 때 전부 쓸 수 있다는게 장점이다.
+
+      // *** URL 파라미터 / query string 단점 *** 
+      // 단점은 URL에 정보가 노출된다는 겁니다. 
+      // 하여 URL 파라미터 / query string의 경우 짧고 안중요한 데이터 전송하는데 쓰는게 좋다. 
+
+
+      // AJAX - fetch() 
+      // GET 요청
+      // query string으로 서버에 데이터 전송하기 
+      // query string을 사용하면 서버 파일(server.js)에 아무 셋팅할 필요없고 
+      // 그냥 아무 API로 GET, POST, PUT, DELETE 요청할 때 아래처럼 쓴다.
+      // (예1) 서버 파일(server.js)로 1개 데이터 "데이터이름=데이터값" 전송
+      // 주의사항 - 서버 파일(server.js)에서 전송한 데이터를 꺼내서 출력하고 싶으면 console.log(요청.query) 코드 사용하면 데이터 출력 가능
+      // fetch('/abc?데이터이름=데이터값') 
+      // (예2) 서버 파일(server.js)로 2개 데이터 "데이터이름=데이터값", "데이터이름2=데이터값2" 전송
+      // 주의사항 
+      // 1) 서버 파일(server.js)로 데이터 2개 이상 전송하려면 아래처럼 데이터이름과 데이터이름2 사이에 & 기호로 연결 필수!
+      // 2) 서버 파일(server.js)에서 전송한 데이터를 꺼내서 출력하고 싶으면 console.log(요청.query) 코드 사용하면 데이터 출력 가능  
+      // fetch('/abc?데이터이름=데이터값&데이터이름2=데이터값2') 
+
+      // AJAX - fetch() 
+      // GET 요청 예시
+      // fetch('/URL~~')
+
+      // POST 요청 예시
+      // 주의사항 
+      // 진짜 POST 요청이 잘 가는지 확인 하려면 
+      // fetch() 잘 작성해서 실행시키고 
+      // 서버 파일(server.js)에서 console.log(요청.body) 코드 작성해서 출력 테스트 진행 
+      // 참고로 console.log(요청.body)가 잘 안나오면 서버파일(server.js) 상단에 app.use(express.json()) 이런게 없어서 그럴 수도 있다.
+      // fetch('/URL~~', {
+      //   method : 'POST',   // POST 요청하기 위해 method 속성에 'POST' 할당 
+      //   headers : { 'Content-Type' : 'application/json' },   // 부가정보 기입란 headers에 'Content-Type' : 'application/json' 할당해야 array, object 데이터를 서버로 잘 전송할 수 있다.
+      //   body : JSON.stringify({a : 1})   // body 안에는 서버로 전송할 array, object 데이터({a : 1})를 집어 넣는다. 단, array, object 데이터({a : 1})를 그냥 넣으면 깨지기 때문에 함수 JSON.stringify() 를 써서 문자형태로 (JSON형태로) 바꿔서 전송 필수!
+      // })
+    })
+  </script>
 </body>
 </html>
 
