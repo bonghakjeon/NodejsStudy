@@ -34,6 +34,7 @@
 // 17강 - 수정기능 만들기 2 (저번시간 숙제)
 // 18강 - 수정기능 만들기 3 (method-override, MongoDB 수정문법 추가)
 // 19강 - 삭제기능 만들기 1 (AJAX, query string)
+// 20강 - 삭제기능 만들기 2 (dataset)
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
 // 클라이언트사이드 렌더링이란? 서버에서 빈 html 파일과 데이터만 클라이언트로 보내고, 웹브라우저 안에서 서버로 부터 받은 html 파일과 데이터 가지고 동적으로 렌더링 해주는 기술이다. (예) React
@@ -680,14 +681,21 @@ app.delete('/delete', async(요청, 응답) => {
 
     // MongoDB 컬렉션 'post'에 있는 모든 document들 중 _id 값이 Json 형식인 ( { _id : query string 입력한 id 값 } ) 특정 document 1개 삭제하기
     // 참고 URL - https://www.mongodb.com/ko-kr/docs/manual/tutorial/remove-documents/
-    let result = await db.collection('post').deleteOne({ _id : new ObjectId(요청.query.deleteid) });
+    let result = await db.collection('post').deleteOne({ _id : new ObjectId(요청.query.docid) });
     console.log(result)
 
     if(result == null) {
       응답.status(400).send('그런 글 없음')   // 사용자가 확인할 수 있도록 오류 상태코드(400 - 웹브라우저 console 창에 출력), 메시지 '그런 글 없음' 전송 - status(400)은 사용자 잘못으로 인한 에러라는 뜻 (예) status(404), status(4XX) 등등... / 참고 URL - https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
     } else {
+      응답.send('삭제완료')
+
+      // 주의사항 - AJAX로 서버에 요청(Http - DELETE)하는 경우 웹서버는 요청.redirect(), 요청.render() 이런걸 사용하면 안 된다.
+      //           왜냐하면 해당 함수(요청.redirect(), 요청.render())들은 다른 페이지로 이동하는거라 웹브라우저 화면이 새로고침 되는 기능이기 때문이다.
+      // AJAX란?
+      // 웹브라우저 화면 새로고침 없이도 서버에게 요청을 날리고 데이터를 주고받는 기능이다. (주소창에 URL 입력하거나 <form> 태그를 전송하는 경우에는 웹브라우저 화면이 항상 새로고침이 되기 때문)
+      // 웹브라우저 화면 새로고침 없이 서버랑 데이터를 주고받으면 더 이쁘고 부드러운 감성가득한 사이트를 운영하고 싶을 때 사용함.
       // MongoDB 컬렉션 'post'에 데이터 삭제 완료시(서버 기능 실행 끝나면) 다른 페이지(list.ejs)로 강제로 이동 처리 
-      응답.redirect('/list')
+      // 응답.redirect('/list')
     }
   } catch(e) {
     console.log(e)   // 에러 메시지 출력
@@ -697,6 +705,7 @@ app.delete('/delete', async(요청, 응답) => {
     // 응답.status(404).send('이상한 url 입력함')
   }
 })
+
 
 // TODO : 아래 주석친 코드 필요시 참고 (2025.01.03 jbh)
 /// <summary>

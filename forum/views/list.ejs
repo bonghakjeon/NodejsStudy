@@ -51,7 +51,7 @@
              style="text-decoration : none">
             <%= 글목록[i].title %>
           </a>
-          <!-- <%= 글목록[i]._id %> -->
+          <!--  <%= 글목록[i]._id %>  -->
           <!--  글수정 페이지(edit.ejs) 이동 기능  -->
           <a href="/edit/<%= 글목록[i]._id %>">✏️</a>
           <!--  TODO : <span> 태그 글삭제 버튼 클릭시 글삭제 deleteList[i].addEventListener로 파라미터값을 넘기기 위해 속성 data-id 사용 구현 (2024.01.07 jbh)  -->
@@ -60,6 +60,7 @@
           <!--  참고 3 URL - https://b.redinfo.co.kr/17  -->
           <!--  참고 4 URL - https://stackoverflow.com/questions/54011229/get-a-value-of-span-tag-html  -->
           <!--  참고 5 URL - https://overcome-diary.tistory.com/36  -->
+          <!--  해당 class="delete"인 <span> 태그 html 요소를 웹브라우저 화면에서 클릭하는 경우 속성 "data-id"에 할당된 데이터를 이벤트리스너에서 가져오기 위해 (예) e.target.dataset.id 아래처럼 구현  -->
           <span class="delete" data-id="<%= 글목록[i]._id %>">🗑️</span>
         </h4>
         <p><%= 글목록[i].content %></p>
@@ -101,16 +102,34 @@
 
     // deleteList 객체에 addEventListener 가입
     for(let i = 0; i < deleteList.length; i++) {
+      // addEventListener 콜백함수 function안에 e 파라미터 추가
       deleteList[i].addEventListener('click', function(e) {
-        console.log('delete 테스트')   // 구글 크롬 웹브라우저 검사(개발자 도구) -> 리본탭 "Console" 창에서 출력됨
-        // let deleteid = document.querySelectorAll('.delete-icon')[0].getAttribute("data-id");
+        // *** 추가 구현 사항 *** 
+        // 삭제 버튼(쓰레기통 이모지) 클릭시 삭제 완료되면 삭제하고자 하는 글 제목(title), 내용(content)이 웹브라우저 화면상에서 사라지도록 html 코드 구현 필요  
 
-        let deleteid = e.target.dataset.id;
-        console.log(deleteid)   // 구글 크롬 웹브라우저 검사(개발자 도구) -> 리본탭 "Console" 창에서 출력됨
+        // console.log('delete 테스트')   // 구글 크롬 웹브라우저 검사(개발자 도구) -> 리본탭 "Console" 창에서 출력됨
+        // let docid = document.querySelectorAll('.delete-icon')[0].getAttribute("data-id");
 
-        fetch('/delete?deleteid=' + deleteid, {
+        // addEventListener 콜백함수 function안에 e 파라미터 추가해야 아래처럼 e.target.dataset.id 값을 가져올 수 있음.
+        // e.target.dataset.id는 class="delete"인 <span> 태그 html 요소를 웹브라우저 화면에서 클릭하는 경우 속성 "data-id"에 할당된 데이터 값을 가져올 때 사용한다.
+        let docid = e.target.dataset.id;
+        // console.log(docid)   // 구글 크롬 웹브라우저 검사(개발자 도구) -> 리본탭 "Console" 창에서 출력됨
+
+        // TODO : 함수 fetch에 파라미터 "body"에 인자로 docid를 넣어서 서버로 Http - DELETE 요청하면 파라미터 "body"에 저장된 값이 전달되지 않는 오류 발생
+        //        하여 해당 오류를 해결하기 위해 함수 fetch에 파라미터 "body" 사용 안하고 쿼리스트링(query string)를 아래처럼 사용함 (2025.01.09 jbh)
+        //        fetch('/delete?docid=' + docid, { ... })
+        // fetch('/delete?docid=' + e.target.dataset.id, {
+        fetch('/delete?docid=' + docid, {
           method : 'DELETE',   // DELETE 요청하기 위해 method 속성에 'DELETE' 할당 
         })
+
+
+        // TODO : 자바스크립트 코드 작성하는 영역 <script> 태그 안에서 ejs 문법(<%= 글목록[0]._id %>) 사용 하려면 아래처럼 문자열 안에 담아야 함('<%= 글목록[0]._id %>') (2025.01.09 jmj)
+        // console.log('<%= 글목록[0]._id %>')  // 웹브라우저 화면 -> 개발자 도구 (검사) -> 탭 console 창에 글목록[0]._id 값을 ejs문법 사용해서 출력
+        // fetch('/delete?docid=<%= 글목록[i]._id %>', {
+        //   method : 'DELETE',
+        // })
+
  
         // *** URL 파라미터 / query string 장점 *** 
         // 둘 다 아무 API로 GET, POST, PUT, DELETE 요청할 때 전부 쓸 수 있다는게 장점이다.
