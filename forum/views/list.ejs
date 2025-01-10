@@ -81,6 +81,11 @@
     <% } %>
   </div>
 
+  <!--  TODO : 자바스크립트 AJAX 기술 사용할 때 쓰는 함수 fetch 기본 문법이 코드가 매우 긴 편이여서 코드를 간소화 하기 위해 외부 라이브러리 "axios" 적용하기 위해 아래 <script> 추가(2025.01.10 jbh)  -->
+  <!--  참고 URL - https://axios-http.com/kr/docs/intro  -->
+  <!--  외부 라이브러리 "axios" 기술 사용 예시 - axios.get('/URL').then((result)=>{ console.log(result) }).catch((error)=>{ console.log(error) })  --> 
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
   <script>
     /// <script> 태그안에 자바스크립트를 적을 수 있다. 그럼 페이지 로드시 자동 실행됨
     /// querySelectorAll로 원하는 html 요소를 모두 찾을 수 있고 addEventListener(C# 이벤트 핸들러와 비슷한 기능) 쓰면 그걸 클릭시 실행할 코드를 입력할 수 있다. 
@@ -88,6 +93,18 @@
     /// AJAX란?
     /// 웹브라우저 화면 새로고침 없이도 서버에게 요청을 날리고 데이터를 주고받는 기능이다. (주소창에 URL 입력하거나 <form> 태그를 전송하는 경우에는 웹브라우저 화면이 항상 새로고침이 되기 때문)
     /// 웹브라우저 화면 새로고침 없이 서버랑 데이터를 주고받으면 더 이쁘고 부드러운 감성가득한 사이트를 운영하고 싶을 때 사용함.
+    /// 구체적인 예로 서버에서 데이터만 AJAX로 가져와서 프론트엔드에서 자바스크립트로 html을 생성하며, 이걸 다른 말로 클라이언트사이드 렌더링이라고 한다.
+
+    // 서버사이드 렌더링이란?
+    // 서버에서 html을 만들어서 웹브라우저 화면으로 보내주는 기술이다.
+    // 단점은 서버에서 html을 만들어서 보내줄 때, 웹브라우저 화면이 새로고침 된다.
+    // 서버사이드 렌더링 예시 - (예) Node.js, 자바스프링 등등...
+    
+    // 클라이언트사이트 렌더링이란?
+    // 서버에서 데이터만 AJAX로 가져와서 프론트엔드에서 자바스크립트로 html을 생성한다.
+    // 장점은 서버에서 데이터만 AJAX로 가져올 때, 웹브라우저 화면이 새로고침이 안 되서 
+    // 좀 부드럽게 새로운 html을 웹브라우저 화면에서 사용자에게 보여줄 수 있다.
+    // 클라이언트사이트 렌더링 예시 - (예) React 웹프레임워크
     
     /// <summary>
     /// delete라는 클래스명을 가진 여러 html 요소 중 0번째를 찾아서 클릭시 함수 fetch() 실행
@@ -104,6 +121,11 @@
     for(let i = 0; i < deleteList.length; i++) {
       // addEventListener 콜백함수 function안에 e 파라미터 추가
       deleteList[i].addEventListener('click', function(e) {
+        // *** 버튼 삭제 기능 내용 정리 ***   
+        // 1. 웹브라우저 화면 새로고침없이 서버로 요청날리고 싶으면 AJAX 사용 
+        // 2. AJAX로 데이터도 가져올 수 있다보니까 클라이언트사이드 렌더링 가능
+        // 3. dataset 문법 이용하면 html에 몰래 데이터 숨겨놓을 수도 있음. 
+
         // *** 추가 구현 사항 *** 
         // 삭제 버튼(쓰레기통 이모지) 클릭시 삭제 완료되면 삭제하고자 하는 글 제목(title), 내용(content)이 웹브라우저 화면상에서 사라지도록 html 코드 구현 필요  
 
@@ -112,16 +134,78 @@
 
         // addEventListener 콜백함수 function안에 e 파라미터 추가해야 아래처럼 e.target.dataset.id 값을 가져올 수 있음.
         // e.target.dataset.id는 class="delete"인 <span> 태그 html 요소를 웹브라우저 화면에서 클릭하는 경우 속성 "data-id"에 할당된 데이터 값을 가져올 때 사용한다.
+        // e.target이란? 
+        // 현재 사용자가 클릭한 삭제 버튼 html 요소 (<span class="delete" data-id="<%= 글목록[i]._id %>">🗑️</span>) 의미
         let docid = e.target.dataset.id;
         // console.log(docid)   // 구글 크롬 웹브라우저 검사(개발자 도구) -> 리본탭 "Console" 창에서 출력됨
 
-        // TODO : 함수 fetch에 파라미터 "body"에 인자로 docid를 넣어서 서버로 Http - DELETE 요청하면 파라미터 "body"에 저장된 값이 전달되지 않는 오류 발생
+        // TODO : AJAX 기능 함수 fetch에 파라미터 "body"에 인자로 docid를 넣어서 서버로 Http - DELETE 요청하면 파라미터 "body"에 저장된 값이 전달되지 않는 오류 발생
         //        하여 해당 오류를 해결하기 위해 함수 fetch에 파라미터 "body" 사용 안하고 쿼리스트링(query string)를 아래처럼 사용함 (2025.01.09 jbh)
         //        fetch('/delete?docid=' + docid, { ... })
         // fetch('/delete?docid=' + e.target.dataset.id, {
+        // 1. 서버에서 보내주는 결과값이 문자로 보내주는 경우 
         fetch('/delete?docid=' + docid, {
-          method : 'DELETE',   // DELETE 요청하기 위해 method 속성에 'DELETE' 할당 
+          // DELETE 요청하기 위해 method 속성에 'DELETE' 할당 
+          method : 'DELETE',})
+        .then((result)=>{
+          //서버가 성공코드(200) 전송한 경우
+          if(result.status == 200) {
+            return result.text()
+          } else {
+            //서버가 에러코드(500 등등...) 전송시 실행할코드
+            alert('에러남')   // alert 메시지 박스 출력
+          }
         })
+        .then((result)=>{
+          //성공시 실행할코드 예시
+          // 이쁘게 html 만들어서 현재 페이지에 출력 
+          
+          //성공시 실행할코드
+          alert(result)   // alert 메시지 박스 출력
+          console.log(result)   // 서버가 보낸 데이터 웹브라우저 -> 개발자도구(검색) -> 리본탭 "Console"창에 출력
+          // 삭제 완료(삭제 성공) 후 웹브라우저 UI 애니메이션 기능 추가 구현
+          // 1) 삭제 버튼 클릭 -> 삭제 완료 -> 현재 삭제 버튼이 속해있는 삭제 완료된 글의 html 요소(<div class="list-box">)를 안보이게 처리(display = 'none') 
+          // 2) 삭제요청 성공시 "지금 누른 삭제 버튼(<span class="delete" data-id="<%= 글목록[i]._id %>">🗑️</span>)의 
+          //    부모(parentElement)의 부모 html(parentElement == <div class="list-box">)을 찾아서 display : none을 주세요"
+          // e.target이란? 
+          // 현재 사용자가 클릭한 삭제 버튼 html 요소 (<span class="delete" data-id="<%= 글목록[i]._id %>">🗑️</span>) 의미
+          e.target.parentElement.parentElement.style.display = 'none'
+        })
+        .catch((error)=>{
+          //인터넷문제 등으로 실패시 실행할코드
+          alert(error)
+          console.log(error)   // 서버가 보낸 데이터 웹브라우저 -> 개발자도구(검색) -> 리본탭 "Console"창에 출력
+        })
+
+        // 2. 서버에서 보내주는 결과값이 array, object 보내주는 경우 
+        // fetch('/delete?docid=' + docid, {
+        //   // DELETE 요청하기 위해 method 속성에 'DELETE' 할당 
+        //   method : 'DELETE',})
+        // .then((result)=>{
+        //   if(result.status == 200) {
+        //     return r.json()
+        //   } else {
+        //     //서버가 에러코드(500 등등...)전송시 실행할코드
+        //   }
+        // })
+        // .then((result)=>{ 
+        //   //성공시 실행할코드
+        //   console.log(result)
+        //   // 삭제 버튼 클릭 -> 삭제 완료 -> 현재 삭제 버튼이 속해있는 삭제 완료된 글의 html 요소(<div class="list-box">)를 안보이게 처리(display = 'none') 
+        //   // 삭제요청 성공시 "지금 누른 삭제 버튼(class="delete" data-id="<%= 글목록[i]._id %>")의 부모의 부모 html(<div class="list-box">)을 찾아서 display : none을 주세요"
+        //   // e.target.parentElement.parentElement.style.display = 'none'
+        // })
+        // .catch((error)=>{
+        //   //인터넷문제 등으로 실패시 실행할코드
+        //   console.log(error)
+        // })
+
+        // 자바스크립트 AJAX 기술 사용할 때 쓰는 함수 fetch 기본 문법이 코드가 매우 긴 편이여서 코드를 간소화 하기 위해 외부 라이브러리 "axios" 적용한 예시
+        // 외부 라이브러리 "axios" 기술 사용 예시 - axios.get('/URL').then((r)=>{ console.log(r) }).catch(()=>{ })  
+        // 외부 라이브러리 "axios" 기술 사용 예시 2
+        // axios.get('/URL')
+        //      .then((result)=>{ console.log(result) })
+        //      .catch((error)=>{ console.log(error) })
 
 
         // TODO : 자바스크립트 코드 작성하는 영역 <script> 태그 안에서 ejs 문법(<%= 글목록[0]._id %>) 사용 하려면 아래처럼 문자열 안에 담아야 함('<%= 글목록[0]._id %>') (2025.01.09 jmj)
@@ -173,7 +257,7 @@
       })
     }
   </script>
-  
+
   <!--  TODO : 아래 <script> 태그 속성 중 "integrity", "crossorigin" 삭제 후 해당 <script> 밑에 또 다른 <script> 태그 만들어서 AJAX - DELETE 요청 가능 하도록 구현(2025.01.07 jbh)  -->
   <!--  참고 URL - https://mozzang.tistory.com/219  -->
   <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  -->
