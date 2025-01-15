@@ -36,6 +36,7 @@
 // 19강 - 삭제기능 만들기 1 (AJAX, query string)
 // 20강 - 삭제기능 만들기 2 (dataset)
 // 21강 - 삭제기능 만들기 3 (AJAX 추가 내용) 
+// 22강 - 글목록 여러 페이지로 나누기
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
 // 클라이언트사이드 렌더링이란? 서버에서 빈 html 파일과 데이터만 클라이언트로 보내고, 웹브라우저 안에서 서버로 부터 받은 html 파일과 데이터 가지고 동적으로 렌더링 해주는 기술이다. (예) React
@@ -270,11 +271,46 @@ app.get('/navbar', function(요청, 응답) {
   응답.sendFile(__dirname + '/navbar.html')
 })
 
-// 서버기능 (Rest API) - MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 화면에 리스트 형식으로 출력  
-// app.get('/list', (요청, 응답) => {
-//   응답.send('안녕')
-// })
+// 서버기능 (Rest API) - MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 게시글 페이지(list.ejs)에 리스트 형식으로 출력  
 app.get('/list', async (요청, 응답) => {
+  // 응답.send('안녕')
+  // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
+  let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)  
+  
+  // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
+  // let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
+  // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
+  // 기본 경로 views 폴더 -> ejs 파일(list.ejs)의 경우 아래처럼 'list.ejs' 이렇게만 작성해도 된다.
+  // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
+  // 1. 아래처럼 ejs 파일('list.ejs')로 데이터 전송({ 글목록 : result })
+  // 2. ejs 파일('list.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
+  응답.render('list.ejs', { 글목록 : result }) 
+})
+
+// 서버기능 (Rest API) - MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 게시글 페이지(list.ejs)에 리스트 형식으로 출력  
+app.get('/list/:id', async (요청, 응답) => {
+  // 응답.send('안녕')
+
+  // *** 함수 "skip().limit()" 예시 *** 
+  // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터들 중 
+  // URL '/list/1' 접속시 상위 1~5번 document 데이터(게시글) 5개 가져오기 
+  // URL '/list/2' 접속시 상위 6~10번 document 데이터(게시글) 5개 가져오기 (상위 1~5번 skip 처리)
+  // URL '/list/3' 접속시 상위 11~15번 document 데이터(게시글) 5개 가져오기 (상위 1~10번 skip 처리)
+  // 함수 skip()에 전달한 인자값은 (URL 파라미터에 입력한거 - 1) * 5이므로 아래처럼 skip( (요청.params.id - 1) * 5 ) 사용한다.
+  let result = await db.collection('post').find().skip( (요청.params.id - 1) * 5 ).limit(5).toArray() 
+  
+  // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
+  // let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
+  // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
+  // 기본 경로 views 폴더 -> ejs 파일(list.ejs)의 경우 아래처럼 'list.ejs' 이렇게만 작성해도 된다.
+  // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
+  // 1. 아래처럼 ejs 파일('list.ejs')로 데이터 전송({ 글목록 : result })
+  // 2. ejs 파일('list.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
+  응답.render('list.ejs', { 글목록 : result }) 
+})
+
+// 서버기능 (Rest API) - URL 파라미터 ":id" 사용하여 pagination(페이지 쪼개기) 기법 사용해서 게시글 페이지(list.ejs)에 게시물 출력하기 
+app.get('/list/next/:id', async (요청, 응답) => {
   // try - catch 문법이란?
   // 이건 try 안에 있는 코드가 뭔가 오류발생하면 catch 안에있는 코드를 대신 실행해주는 유용한 문법이다.
   // try - catch 문법 사용 이유?
@@ -284,6 +320,67 @@ app.get('/list', async (요청, 응답) => {
   // 하여 오류가 발생하는 경우에 특정 코드를 실행하고 싶으면 try - catch 문법 사용하면 된다.
 
   try {
+    // pagination(페이지 쪼개기) 만드는 방법 
+    // 1. 함수 "skip().limit()" 사용하기 
+    // *** 함수 "skip().limit()"의 단점 ***
+    // 함수 skip().limit() 사용하는 경우 문제가 있는데 
+    // 함수 .skip() 안에 100만 이상의 숫자를 넣으면 처리시간이 매우 오래 걸림.  
+    // 왜냐면 함수 skip() 쓰는 경우 document를 하나하나 세어서 수행해주기 때문에 매우 오래걸리기 때문이다.
+    // 그래서 페이지네이션 기능 만들 때 간단한 사이트에선 이 방법 가져다써도 되는데
+    // 너무 많은 게시물을 스킵(skip())하는건 if문 써서 금지시켜 놓아야 함. 
+    // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터들 중 상위 1~5번 document 데이터(게시글) 5개 가져오기 
+    // let result = await db.collection('post').find().skip(0).limit(5).toArray()
+    
+    // *** 함수 "skip().limit()" 예시 *** 
+    // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터들 중 
+    // URL '/list/1' 접속시 상위 1~5번 document 데이터(게시글) 5개 가져오기 
+    // URL '/list/2' 접속시 상위 6~10번 document 데이터(게시글) 5개 가져오기 (상위 1~5번 skip 처리)
+    // URL '/list/3' 접속시 상위 11~15번 document 데이터(게시글) 5개 가져오기 (상위 1~10번 skip 처리)
+    // 함수 skip()에 전달한 인자값은 (URL 파라미터에 입력한거 - 1) * 5이므로 아래처럼 skip( (요청.params.id - 1) * 5 ) 사용한다.
+    // let result = await db.collection('post').find().skip( (요청.params.id - 1) * 5 ).limit(5).toArray() 
+
+    // pagination(페이지 쪼개기) 만드는 방법
+    // 2. 함수 .find()에 조건 '{_id : {$gt : 방금본 마지막게시물_id}}' 추가 방법
+    // *** 함수 "skip().limit()" 단점 보완하기 위해 함수 .find()에 조건 '{_id : {$gt : 방금본 마지막게시물_id}}' 추가 구현 예시 ***
+    // .find()에 조건 '{_id : {$gt : 방금본 마지막게시물_id}}' 의미?
+    // 뭔 뜻이냐면 '방금본 마지막 게시물의 _id'보다
+    // 더 큰 _id를 가진 document들을 5개 찾아오라는 뜻입니다.
+    // 그래서 엄밀히 말하면 페이지네이션이라기보다는 다음 게시물 5개 가져오는 기능인데 이렇게 하면 아래와 같은 장단점이 있다.
+    // 장점 : 매우 빠르다. 원래 _id 기준으로 뭔가 찾는건 DB가 가장 빠르게 하는 작업이다.
+    // 단점 : 페이지네이션 버튼을 다음버튼으로 바꿔야한다. 
+    // 그리고 다음게시물만 가져올 수 있어서  
+    // 1 페이지에서 갑자기 3 페이지로 뛰어넘어서 게시물들을 가져오는 기능은 구현 불가. 
+    // let result = await db.collection('post').find({_id : {$gt : 방금본 마지막게시물_id}}).limit(5).toArray() 
+    // 게시물 페이지(list.ejs)에서 버튼 "다음"(<a href="/list/next/<%= 글목록[글목록.length - 1]._id %>">다음</a>) 클릭시 
+    // 서버로 방금본 마지막게시물_id(<%= 글목록[글목록.length - 1]._id %>) 전송 
+    // -> 서버에서 요청.params.id 쓰면 마지막 게시물 _id)(<%= 글목록[글목록.length - 1]._id %>)를 그대로 쓸 수 있다.
+    let result = await db.collection('post').find({_id : {$gt : new ObjectId(요청.params.id) }}).limit(5).toArray() 
+    응답.render('list.ejs', { 글목록 : result })
+
+    // 게시물 페이지(list.ejs)에서 존재하는 게시글들의 _id값이 
+    // MongoDB -> Document 생성시 자동부여되는 _id(ObjectId)가 아니라 
+    // 정수로 부여하려면 auto increment 하는 방법을 사용해야 한다. 
+    // 단, 글의 _id나 순서가 정수로 꼭 필요한지는 한 번 생각해본 후 만약 필요하다면 그때 사용해야 한다.
+    // *** auto increment 기능 만드는 방법? ***
+    // 글발행할 때 마다 정수로 글번호같은걸 부여하고 싶으면 
+    // 관계형 DB의 경우 auto increment 기능을 켜면 되는데
+    // MongoDB는 그게 없으니 아래처럼 하나 직접 만들어야힘. 
+    // 1. 일단 MongoDB에 다른 이름의 컬렉션 "counter"를 하나 만들기 
+    // 2. 그 안에 { _id : 자동부여된거, count : 0  } 이런 document를 하나 생성하기(INSERT DOCUMENT) 
+    // 3. 그 다음에 게시물을 하나 발행할 때 마다 어떻게 하냐면 
+    // 3-1. 컬렉션 "counter"에 있던 document 를 찾아와서 count : 에 기재된 값을 출력하기. 
+    // 3-2. 그 값에 +1을 한 다음 그걸 _id란에 기입해서 새로운 글을 발행하기.
+    // 4. 그럼 { _id : 1, title : 어쩌구 } 이런게 발행됨.
+    // 5. 성공적으로 발행된걸 확인하면 서버(Server.js) 파일에서 특정 Rest API 안에 함수 updateOne 사용해서 컬렉션 "counter"의 document에 있던 count : 항목을 +1 해줌.
+    // *** 참고사항 ***
+    // auto increment 기능을 위에처럼 다른 이름의 컬렉션 "counter" 생성하지 말고 
+    // trigger 기능을 쓰는게 더 정확하게 잘되기 때문에 아래 URL 주소 참고하여 trigger 기능 구현하기 
+    // trigger란? DB에 뭔가 변화가 일어날 때 자동으로 실행되는 코드를 뜻한다. 
+    // 참고 URL - https://www.mongodb.com/basics/mongodb-auto-increment
+
+
+
+    // TODO : 아래 주석친 코드 필요시 참고 (2025.01.15 minjae)
     // let result = await db.collection('컬렉션명').find().toArray()   // MongoDB의 특정 컬렉션 '컬렉션명'에 있는 모든 document 데이터 가져오기  
 
     // 키워드 await 기능 - 바로 다음줄 실행하지 말고 잠깐 대기 
@@ -292,13 +389,13 @@ app.get('/list', async (요청, 응답) => {
     // 키워드 await 주의사항 - 키워드 await은 정해진 곳만 붙여서 사용할 수 있다. (Promise 뱉는 곳만 가능)
 
     // MongoDB의 특정 컬렉션 'post'에 있는 모든 document 데이터 가져오기 
-    let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
+    // let result = await db.collection('post').find().toArray()   // await 사용해서 코드 다음 줄 실행하기 전에 잠깐 대기 (await를 사용하는 이유는 함수 db.collection() 호출시 처리 시간이 오래 걸리므로 해당 함수 호출 후 MongoDB에서 데이터를 가져와서 함수 응답.send에 인자로 해당 데이터를 전달해야 함.)
     // 유저에게 웹브라우저 쪽으로 ejs 파일 보내는 법
     // 기본 경로 views 폴더 -> ejs 파일(list.ejs)의 경우 아래처럼 'list.ejs' 이렇게만 작성해도 된다.
     // 서버로부터 받은 데이터를 ejs 파일에 넣으려면 
     // 1. 아래처럼 ejs 파일('list.ejs')로 데이터 전송({ 글목록 : result })
     // 2. ejs 파일('list.ejs') 안에서 ejs 문법 <%= 글목록 %> 사용 
-    응답.render('list.ejs', { 글목록 : result }) 
+    //응답.render('list.ejs', { 글목록 : result }) 
   } catch (e) {
     console.log(e)
     응답.send('DB에러남')
