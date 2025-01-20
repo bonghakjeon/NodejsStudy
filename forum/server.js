@@ -38,6 +38,7 @@
 // 21강 - 삭제기능 만들기 3 (AJAX 추가 내용) 
 // 22강 - 글목록 여러 페이지로 나누기
 // 23강 - JWT, session, OAuth 설명시간
+// 24강 - 회원기능 만들기 1 (passport, 로그인기능)
 
 // 서버사이드 렌더링이란? 서버에서 클라이언트로 html 코드 보내줄 때, 미리 데이터를 채워서 보내주는 기술이다. (예) Node.js, Java Spring, JSP 등등...
 // 클라이언트사이드 렌더링이란? 서버에서 빈 html 파일과 데이터만 클라이언트로 보내고, 웹브라우저 안에서 서버로 부터 받은 html 파일과 데이터 가지고 동적으로 렌더링 해주는 기술이다. (예) React
@@ -97,37 +98,58 @@
 const express = require('express') // express 라이브러리 사용
 const app = express() // express 라이브러리 사용
 
-// 4. MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
+// MongoDB 호스팅 받은 DB접속URL 주소 Node.js 서버 파일(server.js)과 연동하기 
 // Node.js 서버와 MongoDB 연동 해야 하는 이유
 // 사용자가 요청하는 데이터를 서버가 중간에 개입하여 검사 과정을 거쳐서 데이터를 입출력 해야하기 때문이다.
-// 5. 아래 주석친 코드 중 new ObjectId('64bfde3b02d2932a4c06ffba') 사용하기 위해서 아래 const { ObjectId } = require('mongodb') 코드 구현 
+// 아래 주석친 코드 중 new ObjectId('64bfde3b02d2932a4c06ffba') 사용하기 위해서 아래 const { ObjectId } = require('mongodb') 코드 구현 
 // let result = await db.collection('post').findOne({_id : new ObjectId('64bfde3b02d2932a4c06ffba')}) 
 const { MongoClient, ObjectId } = require('mongodb')
 // const { ObjectId } = require('mongodb') 
 
-// 6. 웹페이지(확장자 .ejs - (예) edit.ejs) 파일에 구현한 <form> 태그에 속한 method 속성에 "PUT", "DELETE" 요청하기 위한 방법
+
+// 웹페이지(확장자 .ejs - (예) edit.ejs) 파일에 구현한 <form> 태그에 속한 method 속성에 "PUT", "DELETE" 요청하기 위한 방법
 // 1) 터미널에 명령어 "npm install method-override" 입력 및 엔터 -> 라이브러리 method-override 설치 
 // 2) 1)번에서 설치한 method-override 라이브러리 사용해서 아래처럼 코드 작성 
 const methodOverride = require('method-override')
 app.use(methodOverride('_method')) 
 
 
-// 7. 웹서버에 public 폴더 등록 
+// 웹서버에 public 폴더 등록 
 // 용도 - public 폴더 안에 있는 static 파일들(.css / 이미지 / .js)을 html 파일 (예) index.html, about.html 등등... 에서 가져다 쓰기 위한 용도 
 // 참고 URL - https://coding-yesung.tistory.com/175
 app.use(express.static(__dirname + '/public'));
 
-// 8. ejs 템플릿 엔진 사용하기 
+// ejs 템플릿 엔진 사용하기 
 // 웹서버로 부터 받은 데이터를 html 파일에 넣기 위해 ejs 템플릿 엔진 사용 
 // 웹서버로 부터 받은 데이터를 html 파일에 넣으려면 ejs 파일(확장자 .ejs)을 폴더 views 안에서 만들기 
 app.set('view engine', 'ejs') 
 
-// 9. 사용자가 서버로 보낸 정보(데이터) 검사 및 출력 설정 
+// 사용자가 서버로 보낸 정보(데이터) 검사 및 출력 설정 
 // 사용자가 <input> 태그에서 작성하여 서버로 보낸 정보(데이터)를 서버에서 쉽게 출력할 수 있도록 도와주며, 
 // 해당 정보(데이터)를 요청.body 형식으로 정보(데이터)를 쉽게 꺼내쓸 수 있도록 하기 위해 아래처럼 설정할 수 있는 코드 2줄을 추가한다.
 app.use(express.json())
 app.use(express.urlencoded({extended:true})) 
 
+
+// 터미널 명령어 "npm install express-session passport passport-local" 입력 및 엔터 -> passport 라이브러리 설치 완료
+// 위의 터미널 명령어 중 
+// 1) passport는 회원인증 도와주는 메인라이브러리 의미
+// 2) passport-local은 아이디/비번 방식 회원인증쓸 때 쓰는 라이브러리 의미
+// 3) express-session은 세션(session) 만드는거 도와주는 라이브러리 의미
+const session = require('express-session')
+const passport = require('passport')
+const LocalStrategy = require('passport-local')
+
+// 주의사항 - 아래 passport 라이브러리 관련 app.use()가 3개 있는데 순서틀리면 오류 발생함. 
+app.use(passport.initialize())
+// session() 안에 언제 어떻게 세션을 만들지 설정
+app.use(session({
+  secret: '암호화에 쓸 비번',  // secret : 안에는 비번 입력 필수. 세션문자열같은거 암호화할 때 쓰는데 비번 긴게 좋다. 
+  resave : false,             // resave : 는 사용자가 서버로 요청날릴 때 마다 session데이터를 다시 갱신할건지 여부 (false 추천)
+  saveUninitialized : false   // saveUninitialized : 는 사용자가 로그인 안해도 session데이터를 저장해둘지 여부 (false 추천)
+}))
+
+app.use(passport.session()) 
 
 let db;
 // mongodb 사이트에 회원 가입한 계정에 있는 DB접속URL, DB접속아이디, DB접속비번
@@ -323,6 +345,84 @@ app.get('/navbar', function(요청, 응답) {
 // -> 메시지 출력 "CodingApple 웹사이트에 구글 계정의 회원 정보 제공하시겠습니까?" -> 사용자가 버튼 "Yes" 클릭해서 구글 계정의 회원 정보 제공 동의 처리 
 // -> 구글서버에서 CodingApple 웹서버로 알림 전송 "사용자가 구글 계정의 회원 정보 제공 동의 완료" -> CodingApple 웹서버가 구글서버에서 알림 "사용자가 구글 계정의 회원 정보 제공 동의 완료" 받으면 
 // -> CodingApple 웹서버는 구글 서버에 사용자 구글 계정 정보 { 유저이메일, 이름, access_token, 유효기간 } 요청해서 받기 
+
+
+// 아래 라이브러리 passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => { ... }))는 
+// 로그인 페이지(login.ejs)에서 사용자가 입력한 아이디/비번이 서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB와 일치여부 검증하는 로직 짜는 공간이다.
+// 아래처럼 코드를 짜놓으면 앞으로 사용자가 제출한 아이디/비번이 
+// 서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB랑 맞는지 검증하고 싶을 때 이 코드를 실행시키면 되는데 
+// 실행시키는 방법은 서버 파일(server.js) 안에서 구현한 Rest API 안에서 passport.authenticate('local') 이런 코드 작성 및 호출시  
+// 아래 코드가 자동으로 실행된다. 
+// (주의사항) (참고) 이 코드 하단에 API들을 구현해야 해당 API들에서 로그인관련 기능(DB 일치여부 검증 등등...)들이 잘 작동한다.
+// (참고) 사용자가 로그인 페이지(login.ejs)에서 입력해서 보낸 아이디/비번 말고 다른 것도 검증하고 싶으면 passReqToCallback 옵션 찾아보면 요청.body같은걸 저 코드 안에서 사용가능
+// *** 아래 passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => { ... })) 코드 설명 
+// 1) 로그인 페이지(login.ejs)에서 사용자가 아이디/비번(<input name="username">  <input name="password">) 작성 및 버튼 "전송" 클릭 -> 서버 파일(server.js)에서 구현한 Rest API (app.post('/login', (요청, 응답) => { ... }))에 사용자가 입력한 아이디/비번 전송 및 해당 Rest API 실행 
+// 2) 1)번에서 실행한 Rest API (app.post('/login', (요청, 응답) => { ... })) 몸체 안에서 라이브러리 passport 함수 passport.authenticate('local') 호출
+// 3) 아래 라이브러리 passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => { ... }))안에 사용자가 로그인 페이지(login.ejs)에서 입력한 로그인 아이디/비번이 DB와 일치여부 검증하는 로직 실행 
+// 4) 사용자가 로그인 페이지(login.ejs)에서 입력해서 보낸 아이디/비번(<input name="username">  <input name="password">)과 서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB 비교(일치여부 확인) 하기 
+passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => {
+  try {
+    // 5) 사용자가 로그인 페이지(login.ejs)에서 입력해서 보낸 아이디/비번(<input name="username">  <input name="password">)과 서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB 비교(일치여부 확인) 하기 
+    let result = await db.collection('user').findOne({ username : 입력한아이디 })
+    // 6) 사용자가 로그인 페이지(login.ejs)에서 입력해서 보낸 아이디(<input name="username"> )가 
+    //    서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB에 존재하지 않는 경우 
+    if (!result) {
+      return cb(null, false, { message: '아이디 DB에 없음' })   // 아래 false 및 에러메세지({ message: '아이디 DB에 없음' }))를 cb() 안에 넣어주고 리턴 
+    }
+  
+    // 사용자가 로그인 페이지(login.ejs)에서 입력해서 보낸 아이디(<input name="username"> )가 
+    // 서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB에 존재하는 경우 
+    // 7) 사용자가 로그인 페이지(login.ejs)에서 입력해서 보낸 비번이 
+    //    서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB에 일치하는 경우 
+    if (result.password == 입력한비번) {
+      return cb(null, result)   // 일치하면 유저 정보(result)를 cb() 안에 넣어주고 리턴 
+    // 8) 사용자가 로그인 페이지(login.ejs)에서 입력해서 보낸 비번(<input name="password">)이 
+    //    서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB에 일치하지 않는 경우 
+    } else {
+      return cb(null, false, { message: '비번불일치' });   // 아래 false 및 에러메세지({ message: '비번불일치' }))를 cb() 안에 넣어주고 리턴 
+    }
+  } catch(e) {
+    console.log(e)   // 에러 메시지 출력
+    // 응답.send('DB에러남')
+    응답.status(500).send('서버에러남')  // status(500)에서 500은 서버 잘못으로 인한 에러라는 뜻
+  }
+}))
+
+// 서버기능 (Rest API) - 로그인 페이지(login.ejs) 화면 출력(Http - Get 방식)
+app.get('/login', (요청, 응답)=>{
+  응답.render('login.ejs')
+}) 
+
+
+// 서버기능 (Rest API) - 서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 로그인 페이지(login.ejs)에서 
+//                      사용자가 작성한 아이디/비번과 동일한 데이터 존재 여부 확인 및 존재하면 세션(session) 생성 처리 
+app.post('/login', async (요청, 응답, next) => {
+  // 제출한아이디/비번이 DB에 있는거랑 일치하는지 확인하고 세션생성
+
+  // 아래 passport.authenticate('local', 콜백함수)(요청, 응답, next) 실행시 
+  // 서버파일(server.js) 상단 라이브러리 passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => { ... })) 안의 코드 실행 
+  // 로그인 페이지(login.ejs)에서 사용자가 입력한 아이디/비번이 서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB와 일치여부 검증 코드 실행 
+  // 로그인 검증 성공이나 실패시 뭔가 실행하고 싶으면 콜백함수((error, user, info)=>{ ... }) 안에 작성 필수
+  // 콜백함수의 첫번째 파라미터(error)는 로그인 아이디/비번 검증시 에러 발생시 에러 데이터가 해당 파라미터로 들어옴
+  // 콜백함수의 두번째 파라미터(user)는 로그인 아이디/비번 검증 완료(성공)된 로그인한 사용자 정보가 들어옴
+  // 콜백함수의 세번째 파라미터(info)는 로그인 아이디/비번 검증 실패(불일치)시 에러메세지 정보가 들어옴.
+  passport.authenticate('local', (error, user, info) => {
+    if (error) return 응답.status(500).json(error)          // 로그인 아이디/비번 검증시 에러 발생한 경우 
+    if (!user) return 응답.status(401).json(info.message)   // (user == null) 로그인 아이디/비번 검증 완료된 사용자 정보가 들어오지 않은 경우 
+    // 로그인 아이디/비번 검증 성공한 경우 
+    // 요청.logIn() 이라는 함수 실행하면 세션(session) 생성 처리 
+    // 로그인 완료시 사용자에게 입장권(서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB인 session document) 전송
+    // 입장권(서버 파일(server.js)과 연동된 MongoDB의 특정 컬렉션 'user'에 속하는 DB인 session document) 예시
+    // (예) 어떤 사용자가 언제 로그인했고 유효기간은 1월 1일까지 session document id(ObjectId('64f007a4bdf3a18031678fe4'))
+    // 사용자는 서버로 부터 전송받은 입장권(session document에 속한 id 값(ObjectId('64f007a4bdf3a18031678fe4'))을 사용자 웹브라우저 쿠키에 저장 
+    // 사용자는 로그인이 필요한 페이지 방문할 때마다 서버는 사용자가 제출한 쿠키를 까서 값 확인 -> 거기에 기록된 session document id(ObjectId('64f007a4bdf3a18031678fe4')) 가지고 특정 컬렉션 'user'에 속하는 DB에 동일한 값 존재여부 확인 
+    // session document가 유효기간이 지나지 않은 경우 로그인이 필요한 웹페이지를 화면에 출력 
+    요청.logIn(user, (err) => {
+      if (err) return next(err)   // 로그인 오류 발생한 경우 
+      응답.redirect('/')          // 로그인 완료(성공)시 메인 페이지('/')로 강제로 이동 처리 
+    })
+  }) (요청, 응답, next)
+}) 
 
 
 // 서버기능 (Rest API) - MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 게시글 페이지(list.ejs)에 리스트 형식으로 출력  
