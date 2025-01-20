@@ -142,11 +142,15 @@ const LocalStrategy = require('passport-local')
 
 // 주의사항 - 아래 passport 라이브러리 관련 app.use()가 3개 있는데 순서틀리면 오류 발생함. 
 app.use(passport.initialize())
-// session() 안에 언제 어떻게 세션을 만들지 설정
+
+// 아래 session() 안에 언제 어떻게 세션(session)을 만들지(세션(session) 유효기간 설정 포함) 설정
+// 아무 설정을 안해놓으면 기본적으로 세션(session) document 유효기간은 2주로 설정됨
+// 그니까 한 번 로그인하면 사용자가 2주동안 로그인을 유지할 수 있다는 의미이다.
 app.use(session({
-  secret: '암호화에 쓸 비번',  // secret : 안에는 비번 입력 필수. 세션문자열같은거 암호화할 때 쓰는데 비번 긴게 좋다. 
-  resave : false,             // resave : 는 사용자가 서버로 요청날릴 때 마다 session데이터를 다시 갱신할건지 여부 (false 추천)
-  saveUninitialized : false   // saveUninitialized : 는 사용자가 로그인 안해도 session데이터를 저장해둘지 여부 (false 추천)
+  secret: '암호화에 쓸 비번',             // secret : 안에는 비번 입력 필수. 세션문자열같은거 암호화할 때 쓰는데 비번 긴게 좋다. 
+  resave : false,                        // resave : 는 사용자가 서버로 요청날릴 때 마다 session데이터를 다시 갱신할건지 여부 (false 추천)
+  saveUninitialized : false,             // saveUninitialized : 는 사용자가 로그인 안해도 session데이터를 저장해둘지 여부 (false 추천)
+  cookie : { maxAge : 60 * 60 * 1000 }   // cookie : ms 단위로 유효기간 설정(maxAge : 60 * 60 * 1000 은 유효시간 1시간 의미)
 }))
 
 app.use(passport.session()) 
@@ -388,6 +392,81 @@ passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) =
   }
 }))
 
+// ***** 세션(session) 관련 참고사항 *****
+// 1. 로그인성공시 세션(session) 만들어주고 사용자 웹브라우저 -> 개발자도구 -> Application 탭 -> 쿠키(Cookie)에 저장해주는건 passport.serializeUser()
+// 2. 사용자가 쿠키 제출한걸 확인해보는건 passport.deserializeUser() 
+// 3. 현재 로그인된 사용자 정보 출력은 서버파일(server.js)에 속한 모든 Rest API들 안에서 요청.user 사용하면 된다. 
+// 주의사항 
+// 단 문제는 지금은 세션(session)을 메모리에 저장하고 있어서 서버 재시작시 로그인이 풀려버린다.
+// 세션(session)을 DB에 저장하는건 다음 시간에 알아보기. 
+
+// 세션(session) 생성해주는 코드 
+// 아래 Rest API - POST 세션(session) 생성 처리 실행 (app.post('/login', async (요청, 응답, next) => { ... })
+// -> 로그인 아이디/비번 검증 성공한 경우 요청.logIn(user, (err) => { ... } 실행될 때, 
+// 바로 아래 코드 passport.serializeUser((user, done)=>{ ... })가 실행되어 세션(session) 생성 해줌.
+// 아래 파라미터 user를 출력해보면(console.log(user)) DB에 있던 사용자 정보 꺼내쓸 수 있음 
+// (파라미터 user에 전달하는 인자값은 바로 위의 코드 passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => { ... })에서 보내줌.
+// 근데 정확히 말하면 아직 passport에 DB연결을 안해놨기 때문에 DB말고 컴퓨터 메모리에 세션(session)이 저장됨. 
+passport.serializeUser((user, done)=>{
+  // process.nextTick(() => { ... }) 이란?
+  // Node.js 환경에서 특정 코드를 비동기적으로 처리하고 싶을 때 쓰는 문법인데
+  // 자바스크립트는 원래 일반적인 코드들은 동기적으로 처리 된다.
+  // 동기적이 뭐냐면 위에서 부터 코드가 한 줄 한 줄 실행된다는 뜻인데 
+  // 이러면 중간에 처리가 힘겨운 코드를 만나면 다른 밑에 있던 코드들은 실행까지 너무 오랜 시간이 걸린다. 
+  // 이걸 막고 싶으면 비동기처리를 지원하는 스페셜한 코드들을 쓰거나
+  // 아니면 저렇게 아래 코드처럼 강제로 process.nextTick 안에 적으면 된다. 
+  // 그럼 process.nextTick 안에 있는 코드는 처리를 살짝 보류시키고 다른 중요한 작업들이 끝나면 그제서야 코드가 실행된다. 
+  // 그래서 세션(session) 만들고 그런걸 비동기식으로 처리해주려고 라이브러리에서 저렇게 쓰라는데 실은 빼도 별 차이 없다. 
+
+  // (참고) - 유사품으로 queueMicrotask 이런 함수도 process.nextTick(() => { ... }) 처럼 똑같은 기능을 제공함. 
+  process.nextTick(() => {
+    // 아래 done 함수의 두번째 파라미터에 적은 정보({ id: user._id, username: user.username })는 세션(session) document에 기록
+    // 유효기간 이런건 알아서 기록해주기 때문에 done 함수의 두번째 파라미터에 전달한 정보 제외 
+    done(null, { id: user._id, username: user.username })
+  })
+})
+
+// 쿠키(Cookie) 조회 방법 
+// 웹브라우저 개발자도구 Application 탭 -> 쿠키(Cookie) 조회 가능
+// 로그인 성공시 connect.sid 어쩌구라는 이름으로 이상한 문자열이 쿠키로 저장되는데
+// 이게 세션(session) document의 _id 같은 것이다. 
+// 다만 간단한 암호화를 해줬기 때문에 좀 길고 복잡해 보일 뿐이다.
+
+// 사용자가 서버(server.js)로 요청할 때 마다 사용자가 전송한 쿠키(Cookie)를 
+// 서버(server.js)가 직접 까서 확인 및 세션(session)데이터가 진짜 있는지 조회 및 사용자가 로그인이 잘 되어 있는지 여부 판단 
+// 사용자가 서버(server.js)로 요청날릴 때 마다 쿠키에 뭐가 있으면 그걸 까서 세션(session)데이터랑 비교해보고 
+// 그래서 별 이상이 없으면 현재 로그인된 사용자 정보를 서버 파일(server.js)에 속한 모든 Rest API의 요청.user에 담아준다.
+// 그래서 이제 서버 파일(server.js)에서 Rest API 만들 때 로그인된 사용자 정보를 출력하고 싶으면 아무 Rest API에서 요청.user 쓰면 되는 것임
+// 주의사항 - 로그인 후에 Rest API 호출하여 요청.user 잘나오나 한 번 아무 API에서 테스트해보기. (console.log(요청.user)) 
+//           로그인된 사용자 정보가 잘 나오면 성공이다.
+// 1. 세션(session)에 적힌 사용자 정보(user) 가져오기
+passport.deserializeUser(async (user, done) =>{
+  // 2. 최신 회원 정보를 DB에서 가져오기
+  // user 파라미터 출력하면 사용자 _id(user.id) 같은게 나오는데 그걸로 DB를 조회(_id : new ObjectId(user.id) )
+  let result = await db.collection('user').findOne({_id : new ObjectId(user.id) })
+  delete result.password  // 자바스크립트 delete 문법은 object 자료에서 원하는 key를 제거하는 문법이다. 비밀번호(result.password)는 요청.user 에서 필요없어보여서 지웠음 
+
+  // 3. 그걸 요청.user에 집어넣는 식으로 코드짜는게 좋다. 
+  process.nextTick(() => {
+    // done() 함수 두번째 파라미터에 집어넣은 result 변수에 할당된 데이터 값이
+    // done() 함수 호출시 자동으로 현재 로그인된 사용자 정보를 서버 파일(server.js)에 속한 모든 Rest API의 요청.user에 담아준다.
+    // 그래서 이제 서버 파일(server.js)에서 Rest API 만들 때 로그인된 사용자 정보를 출력하고 싶으면 아무 Rest API에서 요청.user 쓰면 되는 것임
+    return done(null, result)
+  })
+
+  // TODO : 아래 주석친 코드 필요시 참고 (2025.01.21 minjae)
+  // 아래 코드만 실행하면 세션(session) document에 적힌 사용자 정보만 달랑가져오게 된다.
+  // 하여 세션(session) 데이터가 좀 오래됐거나 그럴 경우엔 최신 사용자 이름과 좀 다를 수 있는 오류가 발생한다.
+  // 그래서 좋은 관습은
+  // 1. 세션(session)에 적힌 사용자 정보(user) 가져와서
+  // 2. 최신 회원 정보를 DB에서 가져오고
+  // 3. 그걸 요청.user에 집어넣는 식으로 코드짜는게 좋다. 
+  // process.nextTick(()=>{
+  //   return done(null, user)
+  // })
+})
+
+
 // 서버기능 (Rest API) - 로그인 페이지(login.ejs) 화면 출력(Http - Get 방식)
 app.get('/login', (요청, 응답)=>{
   응답.render('login.ejs')
@@ -423,6 +502,14 @@ app.post('/login', async (요청, 응답, next) => {
     })
   }) (요청, 응답, next)
 }) 
+
+// 서버기능 (Rest API) - 로그인 성공한 사용자만 방문할 수 있는 마이페이지 출력하기 
+// ***** 마이페이지 실행 조건 ***** 
+// 조건 1. 마이페이지는 로그인 한 사람만 방문할 수 있다
+// 조건 2. 마이페이지 레이아웃은 아무렇게나 만드는데 현재 로그인된 의 아이디가 어딘가 표기되어있어야한다. 
+app.get('/mypage', async (요청, 응답) => {
+  응답.render('mypage.ejs', { 내정보 : 요청.user })
+})
 
 
 // 서버기능 (Rest API) - MongoDB의 특정 "컬렉션(post)"에 있는 모든 document 데이터 가져와서 게시글 페이지(list.ejs)에 리스트 형식으로 출력  
